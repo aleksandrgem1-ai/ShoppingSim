@@ -1,4 +1,4 @@
-// BuildModePawn.cpp (»—ѕ–ј¬Ћ≈ЌЌјя ѕќЋЌјя ¬≈–—»я)
+// BuildModePawn.cpp (ѕќЋЌјя ¬≈–—»я)
 
 #include "BuildModePawn.h"
 #include "BuildManagerSubsystem.h"
@@ -25,7 +25,6 @@ ABuildModePawn::ABuildModePawn() {
       CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComponent"));
   MovementComponent->UpdatedComponent = RootComponent;
 
-  // «агрузка всех необходимых IA
   static ConstructorHelpers::FObjectFinder<UInputAction> MoveActionRef(
       TEXT("/Game/AssetInput/Asset/IA_Move"));
   if (MoveActionRef.Succeeded())
@@ -76,9 +75,9 @@ ABuildModePawn::ABuildModePawn() {
   if (ExitBuildModeActionRef.Succeeded())
     ExitBuildModeAction = ExitBuildModeActionRef.Object;
 
-  // --- «ј√–”« ј ƒ≈…—“¬»я ƒЋя ¬џ’ќƒј ѕќ 'B' ---
   static ConstructorHelpers::FObjectFinder<UInputAction>
-      ToggleBuildModeActionRef(TEXT("/Game/AssetInput/Asset/IA_ToggleBuildMode"));
+      ToggleBuildModeActionRef(
+          TEXT("/Game/AssetInput/Asset/IA_ToggleBuildMode"));
   if (ToggleBuildModeActionRef.Succeeded())
     ToggleBuildModeAction = ToggleBuildModeActionRef.Object;
 }
@@ -131,13 +130,10 @@ void ABuildModePawn::SetupPlayerInputComponent(
     if (ToggleGridAction)
       EIC->BindAction(ToggleGridAction, ETriggerEvent::Started, this,
                       &ABuildModePawn::HandleToggleGrid);
+
     if (ExitBuildModeAction)
       EIC->BindAction(ExitBuildModeAction, ETriggerEvent::Started, this,
                       &ABuildModePawn::HandleExitBuildMode);
-
-    // --- Ќќ¬јя ѕ–»¬я« ј ƒЋя ¬џ’ќƒј ѕќ 'B' ---
-    // ћы прив€зываем то же действие, что и у персонажа, к той же функции, что и
-    // Escape
     if (ToggleBuildModeAction)
       EIC->BindAction(ToggleBuildModeAction, ETriggerEvent::Started, this,
                       &ABuildModePawn::HandleExitBuildMode);
@@ -241,6 +237,6 @@ void ABuildModePawn::HandleToggleGrid() {
 void ABuildModePawn::HandleExitBuildMode() {
   if (UBuildManagerSubsystem *BuildManager =
           GetGameInstance()->GetSubsystem<UBuildManagerSubsystem>()) {
-    BuildManager->ExitBuildMode();
+    BuildManager->ToggleBuildMode();
   }
 }

@@ -1,7 +1,7 @@
 ﻿// SimCharacter.cpp (ПОЛНАЯ ВЕРСИЯ)
 
 #include "SimCharacter.h"
-#include "BuildManagerSubsystem.h" // <-- Инклюд для вызова подсистемы
+#include "BuildManagerSubsystem.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
@@ -31,7 +31,6 @@ ASimCharacter::ASimCharacter() {
   FollowCamera->SetRelativeLocation(FVector(0.f, 0.f, 60.f));
   FollowCamera->bUsePawnControlRotation = true;
 
-  // --- ИСПРАВЛЕННЫЕ ПУТИ ---
   static ConstructorHelpers::FObjectFinder<UInputAction> IA_MoveRef(
       TEXT("/Game/AssetInput/Asset/IA_Move"));
   if (IA_MoveRef.Succeeded())
@@ -53,6 +52,8 @@ ASimCharacter::ASimCharacter() {
     ToggleBuildModeAction = IA_ToggleBuildRef.Object;
 }
 
+void ASimCharacter::BeginPlay() { Super::BeginPlay(); }
+
 void ASimCharacter::SetupPlayerInputComponent(
     UInputComponent *PlayerInputComponent) {
   Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -69,18 +70,15 @@ void ASimCharacter::SetupPlayerInputComponent(
       EIC->BindAction(InteractAction, ETriggerEvent::Started, this,
                       &ASimCharacter::Interact);
 
-    // Привязываем действие к новой функции
     if (ToggleBuildModeAction)
       EIC->BindAction(ToggleBuildModeAction, ETriggerEvent::Started, this,
                       &ASimCharacter::ToggleBuildMode);
   }
 }
 
-// Функция стала намного проще
 void ASimCharacter::ToggleBuildMode() {
   if (UBuildManagerSubsystem *BuildManager =
           GetGameInstance()->GetSubsystem<UBuildManagerSubsystem>()) {
-    // Просто просим подсистему переключить режим
     BuildManager->ToggleBuildMode();
   }
 }

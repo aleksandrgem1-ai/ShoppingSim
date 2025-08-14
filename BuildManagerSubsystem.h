@@ -2,9 +2,10 @@
 
 #pragma once
 
-#include "BuildManagerSubsystem.generated.h"
+
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "BuildManagerSubsystem.generated.h"
 
 class UStoreZoneData;
 class AStoreZoneActor;

@@ -1,6 +1,7 @@
-// BuildModePawn.h (хяопюбкеммюъ онкмюъ бепяхъ)
+// BuildModePawn.h (онкмюъ бепяхъ)
 
 #pragma once
+
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
@@ -41,9 +42,7 @@ protected:
   UPROPERTY() TObjectPtr<UInputAction> RotateAction;
   UPROPERTY() TObjectPtr<UInputAction> ToggleGridAction;
   UPROPERTY() TObjectPtr<UInputAction> ExitBuildModeAction;
-  UPROPERTY()
-  TObjectPtr<UInputAction> ToggleBuildModeAction; // <-- мнбне деиярбхе дкъ
-                                                  // бшундю он 'B'
+  UPROPERTY() TObjectPtr<UInputAction> ToggleBuildModeAction;
 
 private:
   // --- тСМЙЖХХ-НАПЮАНРВХЙХ ---

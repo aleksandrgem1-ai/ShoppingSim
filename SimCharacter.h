@@ -28,18 +28,12 @@ protected:
 
 private:
   // --- Input Actions для персонажа ---
-  UPROPERTY(EditDefaultsOnly, Category = "Input")
-  TObjectPtr<UInputAction> MoveAction = nullptr;
-
-  UPROPERTY(EditDefaultsOnly, Category = "Input")
-  TObjectPtr<UInputAction> LookAction = nullptr;
-
-  UPROPERTY(EditDefaultsOnly, Category = "Input")
-  TObjectPtr<UInputAction> InteractAction = nullptr;
+  UPROPERTY() TObjectPtr<UInputAction> MoveAction = nullptr;
+  UPROPERTY() TObjectPtr<UInputAction> LookAction = nullptr;
+  UPROPERTY() TObjectPtr<UInputAction> InteractAction = nullptr;
 
   // --- Input Action для переключения режима ---
-  UPROPERTY(EditDefaultsOnly, Category = "Input")
-  TObjectPtr<UInputAction> ToggleBuildModeAction;
+  UPROPERTY() TObjectPtr<UInputAction> ToggleBuildModeAction;
 
   // --- Функции-обработчики ---
   void Move(const FInputActionValue &Value);
@@ -51,6 +45,4 @@ private:
 
   UPROPERTY()
   TObjectPtr<class AInteractableActor> TargetedInteractable = nullptr;
-
-  bool bIsInBuildMode = false;
 };

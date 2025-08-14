@@ -1,4 +1,4 @@
-// BuildManagerSubsystem.cpp (хяопюбкеммюъ онкмюъ бепяхъ)
+// BuildManagerSubsystem.cpp (онкмюъ бепяхъ)
 
 #include "BuildManagerSubsystem.h"
 #include "BuildModePawn.h"
@@ -13,7 +13,6 @@
 void UBuildManagerSubsystem::Initialize(FSubsystemCollectionBase &Collection) {
   Super::Initialize(Collection);
 
-  // --- хяопюбкеммше осрх ---
   PlayerMappingContext = Cast<UInputMappingContext>(
       StaticLoadObject(UInputMappingContext::StaticClass(), nullptr,
                        TEXT("/Game/AssetInput/IMC_Default.IMC_Default")));
