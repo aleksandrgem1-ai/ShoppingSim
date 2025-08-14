@@ -1,4 +1,4 @@
-// SaveLoadSubsystem.h
+// SaveLoadSubsystem.h (намнбкеммши)
 
 #pragma once
 
@@ -11,6 +11,8 @@ class SHOPPINGSIM_API USaveLoadSubsystem : public UGameInstanceSubsystem {
   GENERATED_BODY()
 
 public:
+  virtual void Initialize(FSubsystemCollectionBase &Collection) override;
+
   UFUNCTION(BlueprintCallable, Category = "SaveLoad")
   void SaveGame();
 
@@ -19,4 +21,5 @@ public:
 
 private:
   FString SaveSlotName = TEXT("DefaultSaveSlot");
+  FTimerHandle AutosaveTimerHandle;
 };

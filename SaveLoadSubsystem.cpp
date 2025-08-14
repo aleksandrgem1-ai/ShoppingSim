@@ -1,4 +1,4 @@
-// SaveLoadSubsystem.cpp
+// SaveLoadSubsystem.cpp (ОБНОВЛЕННЫЙ)
 
 #include "SaveLoadSubsystem.h"
 #include "EconomySubsystem.h"
@@ -7,25 +7,35 @@
 #include "StoreZoneActor.h"
 #include "StoreZoneData.h"
 
+void USaveLoadSubsystem::Initialize(FSubsystemCollectionBase &Collection) {
+  Super::Initialize(Collection);
+
+  const float AutosaveInterval = 300.0f; // 5 минут
+  GetGameInstance()->GetTimerManager().SetTimer(AutosaveTimerHandle, this,
+                                                &USaveLoadSubsystem::SaveGame,
+                                                AutosaveInterval, true);
+  UE_LOG(LogTemp, Log, TEXT("Autosave timer started. Interval: %f seconds."),
+         AutosaveInterval);
+}
+
 void USaveLoadSubsystem::SaveGame() {
-  // Создаем или получаем существующий объект сохранения
   UMallSimSaveGame *SaveGameInstance = Cast<UMallSimSaveGame>(
       UGameplayStatics::CreateSaveGameObject(UMallSimSaveGame::StaticClass()));
   if (!SaveGameInstance)
     return;
 
-  // 1. Сохраняем деньги
   UEconomySubsystem *EconomySubsystem =
       GetGameInstance()->GetSubsystem<UEconomySubsystem>();
   if (EconomySubsystem) {
     SaveGameInstance->PlayerMoney = EconomySubsystem->GetCurrentBalance();
   }
 
-  // 2. Сохраняем все размещенные зоны
   TArray<AActor *> FoundZones;
-  UGameplayStatics::GetAllActorsOfClass(
-      GetWorld(), AStoreZoneActor::StaticClass(), FoundZones);
-  SaveGameInstance->PlacedZones.Empty(); // Очищаем старые данные
+  if (UWorld *World = GetGameInstance()->GetWorld()) {
+    UGameplayStatics::GetAllActorsOfClass(World, AStoreZoneActor::StaticClass(),
+                                          FoundZones);
+  }
+  SaveGameInstance->PlacedZones.Empty();
 
   for (AActor *Actor : FoundZones) {
     AStoreZoneActor *Zone = Cast<AStoreZoneActor>(Actor);
@@ -37,13 +47,11 @@ void USaveLoadSubsystem::SaveGame() {
     }
   }
 
-  // Сохраняем на диск
   UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, 0);
-  UE_LOG(LogTemp, Warning, TEXT("Game Saved!"));
+  UE_LOG(LogTemp, Warning, TEXT("Game Saved! (Autosave or manual)"));
 }
 
 void USaveLoadSubsystem::LoadGame() {
-  // Загружаем с диска
   UMallSimSaveGame *LoadedGame = Cast<UMallSimSaveGame>(
       UGameplayStatics::LoadGameFromSlot(SaveSlotName, 0));
   if (!LoadedGame) {
@@ -51,35 +59,33 @@ void USaveLoadSubsystem::LoadGame() {
     return;
   }
 
-  // 1. Восстанавливаем деньги
   UEconomySubsystem *EconomySubsystem =
       GetGameInstance()->GetSubsystem<UEconomySubsystem>();
   if (EconomySubsystem) {
-    // Чтобы избежать двойного начисления, сначала обнуляем баланс
     EconomySubsystem->TrySpendMoney(EconomySubsystem->GetCurrentBalance());
     EconomySubsystem->AddMoney(LoadedGame->PlayerMoney);
   }
 
-  // 2. Удаляем старые зоны перед созданием новых
-  TArray<AActor *> ExistingZones;
-  UGameplayStatics::GetAllActorsOfClass(
-      GetWorld(), AStoreZoneActor::StaticClass(), ExistingZones);
-  for (AActor *Actor : ExistingZones) {
-    Actor->Destroy();
-  }
+  if (UWorld *World = GetGameInstance()->GetWorld()) {
+    TArray<AActor *> ExistingZones;
+    UGameplayStatics::GetAllActorsOfClass(World, AStoreZoneActor::StaticClass(),
+                                          ExistingZones);
+    for (AActor *Actor : ExistingZones) {
+      Actor->Destroy();
+    }
 
-  // 3. Восстанавливаем размещенные зоны
-  for (const FZoneSaveData &SavedZoneData : LoadedGame->PlacedZones) {
-    UStoreZoneData *ZoneDataAsset =
-        Cast<UStoreZoneData>(SavedZoneData.ZoneDataPath.TryLoad());
-    if (ZoneDataAsset) {
-      FActorSpawnParameters SpawnParams;
-      AStoreZoneActor *NewZone = GetWorld()->SpawnActor<AStoreZoneActor>(
-          AStoreZoneActor::StaticClass(), SavedZoneData.ZoneTransform,
-          SpawnParams);
-      if (NewZone) {
-        NewZone->ZoneData = ZoneDataAsset;
-        NewZone->PostInitializeComponents();
+    for (const FZoneSaveData &SavedZoneData : LoadedGame->PlacedZones) {
+      UStoreZoneData *ZoneDataAsset =
+          Cast<UStoreZoneData>(SavedZoneData.ZoneDataPath.TryLoad());
+      if (ZoneDataAsset) {
+        FActorSpawnParameters SpawnParams;
+        AStoreZoneActor *NewZone = World->SpawnActor<AStoreZoneActor>(
+            AStoreZoneActor::StaticClass(), SavedZoneData.ZoneTransform,
+            SpawnParams);
+        if (NewZone) {
+          NewZone->ZoneData = ZoneDataAsset;
+          NewZone->PostInitializeComponents();
+        }
       }
     }
   }

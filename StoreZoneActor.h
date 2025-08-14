@@ -1,4 +1,4 @@
-// StoreZoneActor.h (Без изменений)
+// StoreZoneActor.h (ОБНОВЛЕННЫЙ)
 
 #pragma once
 
@@ -7,6 +7,7 @@
 #include "StoreZoneActor.generated.h"
 
 class UStoreZoneData;
+class UInventoryComponent; // <-- Forward declaration
 
 UCLASS()
 class SHOPPINGSIM_API AStoreZoneActor : public AActor {
@@ -15,15 +16,22 @@ class SHOPPINGSIM_API AStoreZoneActor : public AActor {
 public:
   AStoreZoneActor();
 
-  // Данные, которые определяют эту зону
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone")
   TObjectPtr<UStoreZoneData> ZoneData;
 
+  // --- НОВОЕ: Публичный доступ к инвентарю ---
+  UInventoryComponent *GetInventoryComponent() const {
+    return InventoryComponent;
+  }
+
 public:
-  // Вызывается после того, как все компоненты инициализированы
   virtual void PostInitializeComponents() override;
 
 protected:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
   TObjectPtr<UStaticMeshComponent> MeshComponent;
+
+  // --- НОВОЕ: Компонент инвентаря ---
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+  TObjectPtr<UInventoryComponent> InventoryComponent;
 };
