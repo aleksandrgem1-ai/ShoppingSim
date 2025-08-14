@@ -1,4 +1,7 @@
-// SimPlayerController.h
+// SimPlayerController.h (»—ѕ–ј¬Ћ≈ЌЌјя ¬≈–—»я)
+// ћы убираем все упоминани€ CurrentMoney, AddMoney, Load... и OnPossess,
+// так как этой логики в контроллере больше нет.
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -15,19 +18,15 @@ class SHOPPINGSIM_API ASimPlayerController : public APlayerController {
 public:
   ASimPlayerController();
 
-  UFUNCTION(BlueprintCallable, Exec, Category = "Money")
-  void AddMoney(int32 Amount);
-
-  int32 LoadCurrentMoneyFromGameStateOrSave() const;
-
 protected:
+  // BeginPlay - это единственна€ функци€ жизненного цикла, котора€ нам здесь
+  // нужна
   virtual void BeginPlay() override;
-  virtual void OnPossess(APawn *InPawn) override;
 
 private:
   // IMC загружаетс€ из контента в конструкторе
   UPROPERTY()
-  UInputMappingContext *DefaultMappingContext = nullptr;
+  TObjectPtr<UInputMappingContext> DefaultMappingContext = nullptr;
 
   UPROPERTY()
   int32 MappingPriority = 0;
@@ -37,9 +36,7 @@ private:
   // Ёто свойство теперь будет заполнено из настроек проекта в .cpp файле
   TSubclassOf<UMoneyHUDWidget> MoneyHUDClass;
 
+  // ”казатель на созданный виджет дл€ HUD
   UPROPERTY(Transient)
-  UMoneyHUDWidget *MoneyHUD = nullptr;
-
-  UPROPERTY(VisibleInstanceOnly, Category = "Money")
-  int32 CurrentMoney = 0;
+  TObjectPtr<UMoneyHUDWidget> MoneyHUD = nullptr;
 };

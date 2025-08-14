@@ -1,23 +1,33 @@
-// CashRegister.cpp
+// CashRegister.cpp (ОБНОВЛЕННЫЙ)
 
 #include "CashRegister.h"
 #include "Components/StaticMeshComponent.h"
+#include "EconomySubsystem.h" // <-- 1. ДОБАВЛЯЕМ НОВЫЙ ИНКЛЮД
 
 ACashRegister::ACashRegister() {
-  // Устанавливаем, что Tick() нам не нужен для этого объекта
   PrimaryActorTick.bCanEverTick = false;
 
   MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
   RootComponent = MeshComponent;
 
-  InteractionPromptText = FString(TEXT("Open CashMachine"));
+  InteractionPromptText =
+      FString(TEXT("Get Daily Profit")); // Можно поменять текст
 }
 
 void ACashRegister::OnInteract(AController *Interactor) {
-  // Вызываем родительскую реализацию на случай, если там есть важная логика
   Super::OnInteract(Interactor);
 
-  // Выводим наше уникальное сообщение в лог
-  UE_LOG(LogTemp, Warning, TEXT("KA-CHING! CashMachine used player %s."),
-         *GetNameSafe(Interactor));
+  // 2. ПОЛУЧАЕМ ССЫЛКУ НА ПОДСИСТЕМУ ЭКОНОМИКИ
+  if (UEconomySubsystem *EconomySubsystem =
+          GetWorld()->GetGameInstance()->GetSubsystem<UEconomySubsystem>()) {
+    // 3. ВЫЗЫВАЕМ ЕЕ МЕТОД ДЛЯ ДОБАВЛЕНИЯ ДЕНЕГ
+    const int32 ProfitAmount = 100; // Сумма для примера
+    EconomySubsystem->AddMoney(ProfitAmount);
+
+    UE_LOG(LogTemp, Log, TEXT("Added %d to balance via Cash Register."),
+           ProfitAmount);
+  } else {
+    UE_LOG(LogTemp, Error,
+           TEXT("CashRegister could not find EconomySubsystem!"));
+  }
 }
