@@ -1,7 +1,7 @@
-// SimCharacter.h
+// SimCharacter.h (ПОЛНАЯ ВЕРСИЯ)
+
 #pragma once
 
-#include "Components/InputComponent.h" // важно для линковки метода
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
@@ -21,22 +21,36 @@ protected:
   virtual void BeginPlay() override;
   virtual void
   SetupPlayerInputComponent(UInputComponent *PlayerInputComponent) override;
-  virtual void Tick(float DeltaTime) override; // Добавляем Tick
+  virtual void Tick(float DeltaTime) override;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-  UCameraComponent *FollowCamera;
+  TObjectPtr<UCameraComponent> FollowCamera;
 
 private:
-  UPROPERTY() UInputAction *MoveAction = nullptr;
-  UPROPERTY() UInputAction *LookAction = nullptr;
-  UPROPERTY() UInputAction *InteractAction = nullptr;
+  // --- Input Actions для персонажа ---
+  UPROPERTY(EditDefaultsOnly, Category = "Input")
+  TObjectPtr<UInputAction> MoveAction = nullptr;
 
+  UPROPERTY(EditDefaultsOnly, Category = "Input")
+  TObjectPtr<UInputAction> LookAction = nullptr;
+
+  UPROPERTY(EditDefaultsOnly, Category = "Input")
+  TObjectPtr<UInputAction> InteractAction = nullptr;
+
+  // --- Input Action для переключения режима ---
+  UPROPERTY(EditDefaultsOnly, Category = "Input")
+  TObjectPtr<UInputAction> ToggleBuildModeAction;
+
+  // --- Функции-обработчики ---
   void Move(const FInputActionValue &Value);
   void Look(const FInputActionValue &Value);
   void Interact(const FInputActionValue &Value);
+  void ToggleBuildMode();
+
   void TraceForInteractable();
 
-  /** Указатель на объект, на который мы смотрим в данный момент */
   UPROPERTY()
   TObjectPtr<class AInteractableActor> TargetedInteractable = nullptr;
+
+  bool bIsInBuildMode = false;
 };

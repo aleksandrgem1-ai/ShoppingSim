@@ -1,10 +1,10 @@
-// BuildManagerSubsystem.h(ОБНОВЛЕННЫЙ)
+// BuildManagerSubsystem.h (ПОЛНАЯ ВЕРСИЯ)
 
 #pragma once
 
+#include "BuildManagerSubsystem.generated.h"
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "BuildManagerSubsystem.generated.h"
 
 class UStoreZoneData;
 class AStoreZoneActor;
@@ -15,31 +15,41 @@ class SHOPPINGSIM_API UBuildManagerSubsystem : public UGameInstanceSubsystem {
   GENERATED_BODY()
 
 public:
-  // Стандартная функция инициализации для подсистем
   virtual void Initialize(FSubsystemCollectionBase &Collection) override;
 
-  // Вход в режим строительства
-  UFUNCTION(BlueprintCallable, Category = "Building")
-  void EnterBuildMode();
+  // --- ЕДИНАЯ ТОЧКА ВХОДА ДЛЯ ПЕРЕКЛЮЧЕНИЯ ---
+  void ToggleBuildMode();
 
-  // Выход из режима строительства
-  UFUNCTION(BlueprintCallable, Category = "Building")
-  void ExitBuildMode();
+  // --- Функции для управления процессом строительства ---
+  void StartPlacement();
+  void UpdateGhostActorTransform();
+  void ConfirmPlacement();
+  void CancelPlacement();
 
-  // ... остальной код ...
+  void SelectObjectForMove(AStoreZoneActor *ZoneToMove);
+  void HandleDestruction(AStoreZoneActor *ZoneToDestroy);
+
+  void ToggleGridSnapping();
+  void AddRotation(float Angle);
 
 private:
-  // Сохраняем указатель на оригинального персонажа
-  UPROPERTY()
-  TObjectPtr<APawn> OriginalPlayerPawn;
+  // --- Приватные функции для внутренней логики ---
+  void EnterBuildMode();
+  void ExitBuildMode();
 
-  // Ассеты IMC (теперь загружаются в .cpp)
-  UPROPERTY()
-  TObjectPtr<UInputMappingContext> PlayerMappingContext;
-
-  UPROPERTY()
-  TObjectPtr<UInputMappingContext> BuildModeMappingContext;
-
-  // Класс для камеры (теперь устанавливается в .cpp)
+  // --- Свойства для переключения режимов ---
+  UPROPERTY() TObjectPtr<APawn> OriginalPlayerPawn;
+  UPROPERTY() TObjectPtr<UInputMappingContext> PlayerMappingContext;
+  UPROPERTY() TObjectPtr<UInputMappingContext> BuildModeMappingContext;
   TSubclassOf<APawn> BuildModePawnClass;
+
+  // --- Свойства для управления строительством ---
+  UPROPERTY() TObjectPtr<UStoreZoneData> TestZoneToBuild;
+  UPROPERTY() TObjectPtr<AStoreZoneActor> GhostActor;
+
+  // --- ГЛАВНЫЙ ФЛАГ СОСТОЯНИЯ ---
+  bool bIsInBuildMode = false;
+
+  bool bIsGridSnappingEnabled = true;
+  float CurrentPlacementRotation = 0.0f;
 };

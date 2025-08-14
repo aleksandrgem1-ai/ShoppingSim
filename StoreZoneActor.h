@@ -1,4 +1,4 @@
-// StoreZoneActor.h (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+// StoreZoneActor.h (Без изменений)
 
 #pragma once
 
@@ -12,17 +12,18 @@ UCLASS()
 class SHOPPINGSIM_API AStoreZoneActor : public AActor {
   GENERATED_BODY()
 
-public: // <-- ИЗМЕНЕНИЕ ЗДЕСЬ (было protected)
+public:
   AStoreZoneActor();
 
   // Данные, которые определяют эту зону
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone")
   TObjectPtr<UStoreZoneData> ZoneData;
 
+public:
   // Вызывается после того, как все компоненты инициализированы
   virtual void PostInitializeComponents() override;
 
-protected: // <-- Компоненты могут остаться здесь
+protected:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
   TObjectPtr<UStaticMeshComponent> MeshComponent;
 };
