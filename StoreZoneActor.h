@@ -1,9 +1,12 @@
-// StoreZoneActor.h
+// StoreZoneActor.h (Замена для PlaceableActor.h)
+
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "StoreZoneActor.generated.h" // Эта строка уже будет здесь
+#include "StoreZoneActor.generated.h"
+
+class UStoreZoneData;
 
 UCLASS()
 class SHOPPINGSIM_API AStoreZoneActor : public AActor {
@@ -12,17 +15,14 @@ class SHOPPINGSIM_API AStoreZoneActor : public AActor {
 public:
   AStoreZoneActor();
 
-  // --- НАЧАЛО ВСТАВЛЕННОГО КОДА ИЗ PLACEABLEACTOR.H ---
-  /** Стоимость размещения этого объекта */
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Economy")
-  int32 Cost = 100;
-
-  /** Доход, который этот объект генерирует в секунду */
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Economy")
-  float IncomePerSecond = 1.0f;
+  // Данные, которые определяют эту зону
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone")
+  TObjectPtr<UStoreZoneData> ZoneData;
 
 protected:
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-  TObjectPtr<UStaticMeshComponent> Mesh;
-  // --- КОНЕЦ ВСТАВЛЕННОГО КОДА ---
+  // Вызывается после того, как все компоненты инициализированы
+  virtual void PostInitializeComponents() override;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+  TObjectPtr<UStaticMeshComponent> MeshComponent;
 };
