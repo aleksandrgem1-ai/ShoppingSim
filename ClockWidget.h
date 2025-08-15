@@ -1,4 +1,4 @@
-// ClockWidget.h (НОВЫЙ ФАЙЛ)
+// ShoppingSim/ClockWidget.h
 
 #pragma once
 
@@ -12,13 +12,13 @@ UCLASS()
 class SHOPPINGSIM_API UClockWidget : public UUserWidget {
   GENERATED_BODY()
 
-public:
-  // Обновляет текст с временем
-  UFUNCTION(BlueprintCallable)
-  void SetTime(int32 Hour, int32 Minute);
-
 protected:
-  // Привязка к TextBlock для времени (имя в BP должно быть TimeText)
+  virtual void NativeConstruct() override;
+
   UPROPERTY(meta = (BindWidget))
   TObjectPtr<UTextBlock> TimeText;
+
+  // ДОБАВЛЯЕМ UFUNCTION()
+  UFUNCTION()
+  void UpdateTime(int32 Hour, int32 Minute);
 };

@@ -1,4 +1,4 @@
-// GameHUDWidget.h (ОБНОВЛЕННЫЙ)
+// ShoppingSim/GameHUDWidget.h
 
 #pragma once
 
@@ -6,34 +6,24 @@
 #include "CoreMinimal.h"
 #include "GameHUDWidget.generated.h"
 
-class UMoneyHUDWidget; // <-- Используем ваш класс
 class UClockWidget;
 class UDayInfoWidget;
+class UMoneyHUDWidget;
 
 UCLASS()
 class SHOPPINGSIM_API UGameHUDWidget : public UUserWidget {
   GENERATED_BODY()
 
-public:
-  void SetMoney(int32 NewValue);
-  void SetTime(int32 Hour, int32 Minute);
-  void SetDayInfo(int32 Day, int32 Goal);
-
 protected:
-  // --- Привязки к виджетам в Blueprint ---
+  // --- ДОБАВЛЯЕМ НЕДОСТАЮЩЕЕ ОБЪЯВЛЕНИЕ ---
+  virtual void NativeConstruct() override;
 
-  // Привязка к вашему виджету денег
-  // (имя в BP должно быть MoneyWidgetInstance)
   UPROPERTY(meta = (BindWidget))
-  TObjectPtr<UMoneyHUDWidget> MoneyWidgetInstance;
+  TObjectPtr<UClockWidget> ClockWidget;
 
-  // Привязка к виджету часов
-  // (имя в BP должно быть ClockWidgetInstance)
   UPROPERTY(meta = (BindWidget))
-  TObjectPtr<UClockWidget> ClockWidgetInstance;
+  TObjectPtr<UDayInfoWidget> DayInfoWidget;
 
-  // Привязка к виджету информации о дне
-  // (имя в BP должно быть DayInfoWidgetInstance)
   UPROPERTY(meta = (BindWidget))
-  TObjectPtr<UDayInfoWidget> DayInfoWidgetInstance;
+  TObjectPtr<UMoneyHUDWidget> MoneyHUDWidget;
 };

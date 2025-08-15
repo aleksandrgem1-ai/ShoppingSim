@@ -9,7 +9,6 @@
 // Forward declare classes
 class UCurveFloat;
 
-// --- ОБЪЯВЛЕНИЕ ДЕЛЕГАТОВ ---
 // Делегат для обновления времени (часы и минуты)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTimeUpdated, int32, Hour, int32,
                                              Minute);
@@ -35,7 +34,7 @@ public:
   UFUNCTION(BlueprintPure, Category = "Time")
   void GetCurrentDayInfo(int &OutDay, int &OutHour) const;
 
-  // --- ДЕЛЕГАТЫ ДЛЯ UI ---
+  // Делегаты для UI
   UPROPERTY(BlueprintAssignable, Category = "Time")
   FOnTimeUpdated OnTimeUpdated;
 
@@ -43,7 +42,7 @@ public:
   FOnDayChanged OnDayChanged;
 
 private:
-  // --- Переменные времени и экономики ---
+  // Переменные времени и экономики
   UPROPERTY()
   float DayDurationInSeconds = 1200.0f;
 
@@ -64,6 +63,6 @@ private:
 
   FTimerHandle SecondTickTimerHandle;
 
-  // --- Приватные функции ---
+  // Приватные функции
   void TickSecond();
 };

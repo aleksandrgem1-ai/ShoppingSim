@@ -1,24 +1,16 @@
-// GameHUDWidget.cpp (ОБНОВЛЕННЫЙ)
+// ShoppingSim/GameHUDWidget.cpp
 
 #include "GameHUDWidget.h"
 #include "ClockWidget.h"
 #include "DayInfoWidget.h"
-#include "MoneyHUDWidget.h" // <-- Инклюдим ваш класс
+#include "Kismet/GameplayStatics.h"
+#include "MoneyHUDWidget.h"
+#include "TimeManagerSubsystem.h"
 
-void UGameHUDWidget::SetMoney(int32 NewValue) {
-  if (MoneyWidgetInstance) {
-    MoneyWidgetInstance->SetMoney(NewValue);
-  }
-}
+void UGameHUDWidget::NativeConstruct() {
+  Super::NativeConstruct();
 
-void UGameHUDWidget::SetTime(int32 Hour, int32 Minute) {
-  if (ClockWidgetInstance) {
-    ClockWidgetInstance->SetTime(Hour, Minute);
-  }
-}
-
-void UGameHUDWidget::SetDayInfo(int32 Day, int32 Goal) {
-  if (DayInfoWidgetInstance) {
-    DayInfoWidgetInstance->SetDayInfo(Day, Goal);
-  }
+  // The child widgets (ClockWidget, DayInfoWidget) will now update themselves
+  // by binding to the TimeManagerSubsystem's delegates.
+  // No need to manually call update functions from here.
 }
