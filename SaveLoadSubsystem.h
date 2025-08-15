@@ -1,4 +1,4 @@
-// SaveLoadSubsystem.h (намнбкеммши)
+// SaveLoadSubsystem.h (хяопюбкеммши)
 
 #pragma once
 
@@ -16,7 +16,8 @@ public:
   UFUNCTION(BlueprintCallable, Category = "SaveLoad")
   void SaveGame();
 
-  UFUNCTION(BlueprintCallable, Category = "SaveLoad")
+  UFUNCTION(BlueprintCallable,
+            Category = "SaveLoad") // <-- хяопюбкемю ноевюрйю гдеяэ
   void LoadGame();
 
 private:

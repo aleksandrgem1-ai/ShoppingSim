@@ -1,4 +1,4 @@
-// SaveLoadSubsystem.cpp (намнбкеммши)
+// SaveLoadSubsystem.cpp (хяопюбкеммши)
 
 #include "SaveLoadSubsystem.h"
 #include "EconomySubsystem.h"

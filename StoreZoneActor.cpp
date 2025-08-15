@@ -1,8 +1,9 @@
-// StoreZoneActor.cpp (ОБНОВЛЕННЫЙ)
+// StoreZoneActor.cpp (ПОЛНАЯ ВЕРСИЯ)
 
 #include "StoreZoneActor.h"
 #include "Components/StaticMeshComponent.h"
-#include "InventoryComponent.h" // <-- Инклюд нового компонента
+#include "EconomySubsystem.h"
+#include "InventoryComponent.h"
 #include "StoreZoneData.h"
 
 AStoreZoneActor::AStoreZoneActor() {
@@ -10,9 +11,10 @@ AStoreZoneActor::AStoreZoneActor() {
 
   MeshComponent =
       CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
-  RootComponent = MeshComponent;
+  if (RootComponent) {
+    MeshComponent->SetupAttachment(RootComponent);
+  }
 
-  // --- НОВОЕ: Создаем компонент инвентаря ---
   InventoryComponent =
       CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 }
@@ -43,5 +45,46 @@ void AStoreZoneActor::PostInitializeComponents() {
         }
       }
     }
+  }
+}
+
+void AStoreZoneActor::BreakDown() {
+  if (CurrentStatus == EZoneStatus::Active) {
+    CurrentStatus = EZoneStatus::Broken;
+    InteractionPromptText = FString(TEXT("REPAIR"));
+  }
+}
+
+void AStoreZoneActor::Repair() {
+  if (CurrentStatus == EZoneStatus::Broken) {
+    const int32 RepairCost = 50;
+    if (UEconomySubsystem *Economy =
+            GetWorld()->GetGameInstance()->GetSubsystem<UEconomySubsystem>()) {
+      if (Economy->TrySpendMoney(RepairCost)) {
+        CurrentStatus = EZoneStatus::Active;
+        InteractionPromptText = FString(TEXT(""));
+        UE_LOG(LogTemp, Log, TEXT("Repaired %s for %d"),
+               *GetZoneName().ToString(), RepairCost);
+      } else {
+        UE_LOG(LogTemp, Warning, TEXT("Not enough money to repair %s"),
+               *GetZoneName().ToString());
+      }
+    }
+  }
+}
+
+bool AStoreZoneActor::IsBroken() const {
+  return CurrentStatus == EZoneStatus::Broken;
+}
+
+FText AStoreZoneActor::GetZoneName() const {
+  return ZoneData ? ZoneData->ZoneName : FText::FromString("Unknown Zone");
+}
+
+void AStoreZoneActor::OnInteract(AController *Interactor) {
+  Super::OnInteract(Interactor);
+
+  if (IsBroken()) {
+    Repair();
   }
 }

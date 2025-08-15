@@ -1,15 +1,13 @@
-// SimPlayerController.cpp (ИСПРАВЛЕННАЯ ВЕРСИЯ)
-// Здесь мы убираем все вызовы удаленных функций и переменных
-// и переключаемся на работу с EconomySubsystem.
+// SimPlayerController.cpp (ВАШ ФАЙЛ, БЕЗ ИЗМЕНЕНИЙ)
 
 #include "SimPlayerController.h"
 #include "Blueprint/UserWidget.h"
-#include "EconomySubsystem.h" // <-- Важный инклюд для новой системы
+#include "EconomySubsystem.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameHUDWidget.h"
 #include "InputMappingContext.h"
-#include "Logging/LogMacros.h"
-#include "MoneyHUDWidget.h"
 #include "SimSettings.h"
+#include "TimeManagerSubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSimPC, Log, All);
 
@@ -18,64 +16,49 @@ ASimPlayerController::ASimPlayerController() {
 
   const USimSettings *GameSettings = GetDefault<USimSettings>();
   if (GameSettings) {
-    MoneyHUDClass = GameSettings->MoneyHUDWidgetClass;
-  }
-
-  if (!MoneyHUDClass) {
-    UE_LOG(LogSimPC, Warning,
-           TEXT("[PC] MoneyHUDClass is not set in Project Settings!"));
+    GameHUDClass = GameSettings->GameHUDWidgetClass;
   }
 
   static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMCObj(
       TEXT("/Game/AssetInput/IMC_Default.IMC_Default"));
   if (IMCObj.Succeeded()) {
     DefaultMappingContext = IMCObj.Object;
-  } else {
-    UE_LOG(LogSimPC, Warning, TEXT("[PC] Failed to load Default IMC"));
   }
 }
 
 void ASimPlayerController::BeginPlay() {
   Super::BeginPlay();
-
   AddDefaultIMC();
 
-  // Получаем подсистему экономики
-  UEconomySubsystem *EconomySubsystem =
-      GetGameInstance()->GetSubsystem<UEconomySubsystem>();
-  if (!EconomySubsystem) {
-    UE_LOG(LogSimPC, Error, TEXT("FATAL: EconomySubsystem not found!"));
-    return;
-  }
+  if (GameHUDClass) {
+    GameHUD = CreateWidget<UGameHUDWidget>(this, GameHUDClass);
+    if (GameHUD) {
+      GameHUD->AddToViewport();
 
-  if (MoneyHUDClass) {
-    UMoneyHUDWidget *HUDWidget =
-        CreateWidget<UMoneyHUDWidget>(this, MoneyHUDClass);
-    if (HUDWidget) {
-      HUDWidget->AddToViewport();
-      MoneyHUD = HUDWidget;
+      if (UEconomySubsystem *Economy =
+              GetGameInstance()->GetSubsystem<UEconomySubsystem>()) {
+        GameHUD->SetMoney(Economy->GetCurrentBalance());
+        Economy->OnBalanceChanged.AddDynamic(GameHUD,
+                                             &UGameHUDWidget::SetMoney);
+      }
 
-      // Устанавливаем начальное значение из подсистемы и подписываемся на
-      // будущие изменения
-      HUDWidget->SetMoney(EconomySubsystem->GetCurrentBalance());
-      EconomySubsystem->OnBalanceChanged.AddDynamic(HUDWidget,
-                                                    &UMoneyHUDWidget::SetMoney);
+      if (UTimeManagerSubsystem *TimeManager =
+              GetWorld()->GetSubsystem<UTimeManagerSubsystem>()) {
+        int32 Day, Goal;
+        TimeManager->GetCurrentDayInfo(Day, Goal);
+        GameHUD->SetDayInfo(Day, Goal);
+        GameHUD->SetTime(0, 0);
 
-      UE_LOG(LogSimPC, Log,
-             TEXT("MoneyHUD created and bound to EconomySubsystem."));
+        TimeManager->OnTimeUpdated.AddDynamic(GameHUD,
+                                              &UGameHUDWidget::SetTime);
+      }
     }
   }
 }
 
-// Функции LoadCurrentMoneyFromGameStateOrSave(), AddMoney() и OnPossess()
-// ПОЛНОСТЬЮ УДАЛЕНЫ так как их больше не существует в .h файле.
-
 void ASimPlayerController::AddDefaultIMC() {
-  if (!DefaultMappingContext) {
-    UE_LOG(LogSimPC, Warning, TEXT("[PC] DefaultMappingContext is null"));
+  if (!DefaultMappingContext)
     return;
-  }
-
   if (ULocalPlayer *LocalPlayer = GetLocalPlayer()) {
     if (auto *InputSubsystem =
             ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
