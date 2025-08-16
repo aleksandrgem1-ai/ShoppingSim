@@ -12,13 +12,17 @@ UCLASS()
 class SHOPPINGSIM_API UClockWidget : public UUserWidget {
   GENERATED_BODY()
 
+public:
+  /** ”станавливает врем€ в часах и минутах */
+  UFUNCTION(BlueprintCallable)
+  void SetTime(int32 Hour, int32 Minute);
+
 protected:
   virtual void NativeConstruct() override;
 
   UPROPERTY(meta = (BindWidget))
   TObjectPtr<UTextBlock> TimeText;
 
-  // ƒќЅј¬Ћя≈ћ UFUNCTION()
   UFUNCTION()
   void UpdateTime(int32 Hour, int32 Minute);
 };

@@ -6,33 +6,50 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "EconomySubsystem.generated.h"
 
-// Объявляем делегат, который будет оповещать об изменении баланса.
-// Он будет доступен в Blueprint.
+// Баланс
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBalanceChangedSignature, int32,
                                             NewBalance);
+
+// Доход (за текущий день/период)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnIncomeChangedSignature, int32,
+                                            NewIncome);
 
 UCLASS()
 class SHOPPINGSIM_API UEconomySubsystem : public UGameInstanceSubsystem {
   GENERATED_BODY()
 
 public:
-  // Добавляет деньги на счет
+  // Начислить деньги (увеличивает баланс и доход)
   UFUNCTION(BlueprintCallable, Category = "Economy")
   void AddMoney(int32 Amount);
 
-  // Пытается потратить деньги. Возвращает true, если успешно.
+  // Потратить деньги. Возвращает true, если успешно
   UFUNCTION(BlueprintCallable, Category = "Economy")
   bool TrySpendMoney(int32 Amount);
 
-  // Возвращает текущий баланс
+  // Получить текущий баланс
   UFUNCTION(BlueprintPure, Category = "Economy")
   int32 GetCurrentBalance() const;
 
-  // Делегат, на который можно подписаться для обновления UI
+  // Получить текущий доход за период
+  UFUNCTION(BlueprintPure, Category = "Economy")
+  int32 GetCurrentIncome() const;
+
+  // Сбросить доход (например, в начале нового дня)
+  UFUNCTION(BlueprintCallable, Category = "Economy")
+  void ResetIncome();
+
+  // Делегаты для UI
   UPROPERTY(BlueprintAssignable, Category = "Economy")
   FOnBalanceChangedSignature OnBalanceChanged;
+
+  UPROPERTY(BlueprintAssignable, Category = "Economy")
+  FOnIncomeChangedSignature OnIncomeChanged;
 
 private:
   UPROPERTY()
   int32 CurrentBalance = 0;
+
+  UPROPERTY()
+  int32 CurrentIncome = 0;
 };

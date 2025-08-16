@@ -2,7 +2,7 @@
 
 #include "CashRegister.h"
 #include "Components/StaticMeshComponent.h"
-#include "EconomySubsystem.h" // <-- 1. ÄÎÁÀÂËßÅÌ ÍÎÂÛÉ ÈÍÊËÞÄ
+#include "EconomySubsystem.h"
 
 ACashRegister::ACashRegister() {
   PrimaryActorTick.bCanEverTick = false;
@@ -11,16 +11,14 @@ ACashRegister::ACashRegister() {
   RootComponent = MeshComponent;
 
   InteractionPromptText =
-      FString(TEXT("Get Daily Profit")); // Ìîæíî ïîìåíÿòü òåêñò
+      FString(TEXT("Get Daily Profit"));
 }
 
 void ACashRegister::OnInteract(AController *Interactor) {
   Super::OnInteract(Interactor);
 
-  // 2. ÏÎËÓ×ÀÅÌ ÑÑÛËÊÓ ÍÀ ÏÎÄÑÈÑÒÅÌÓ ÝÊÎÍÎÌÈÊÈ
   if (UEconomySubsystem *EconomySubsystem =
           GetWorld()->GetGameInstance()->GetSubsystem<UEconomySubsystem>()) {
-    // 3. ÂÛÇÛÂÀÅÌ ÅÅ ÌÅÒÎÄ ÄËß ÄÎÁÀÂËÅÍÈß ÄÅÍÅÃ
     const int32 ProfitAmount = 100; // Ñóììà äëÿ ïðèìåðà
     EconomySubsystem->AddMoney(ProfitAmount);
 

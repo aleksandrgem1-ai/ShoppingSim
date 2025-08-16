@@ -1,4 +1,4 @@
-// ShoppingSim/TimeManagerSubsystem.h
+// TimeManagerSubsystem.h
 
 #pragma once
 
@@ -6,63 +6,47 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "TimeManagerSubsystem.generated.h"
 
-// Forward declare classes
 class UCurveFloat;
 
-// Делегат для обновления времени (часы и минуты)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTimeUpdated, int32, Hour, int32,
-                                             Minute);
-// Делегат для смены дня (со всей нужной информацией)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnDayChanged, int32, NewDay,
-                                              int32, PreviousDayIncome, int32,
-                                              PreviousDayGoal, int32,
-                                              NewDayGoal);
+// --- ОБЪЯВЛЯЕМ НОВЫЕ ДЕЛЕГАТЫ ---
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTimeUpdatedSignature, int32,
+                                             Hour, int32, Minute);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnDayChangedSignature, int32,
+                                              NewDay, int32,
+                                              IncomeForPreviousDay, int32,
+                                              GoalForPreviousDay, int32,
+                                              NewGoal);
 
-/**
- * Manages game time, day/night cycle, and triggers demand calculations.
- */
 UCLASS()
 class SHOPPINGSIM_API UTimeManagerSubsystem : public UWorldSubsystem {
   GENERATED_BODY()
 
 public:
-  // Lifecycle functions
   virtual void Initialize(FSubsystemCollectionBase &Collection) override;
   virtual void Deinitialize() override;
 
-  // Function to get current time information for compatibility
-  UFUNCTION(BlueprintPure, Category = "Time")
-  void GetCurrentDayInfo(int &OutDay, int &OutHour) const;
-
-  // Делегаты для UI
   UPROPERTY(BlueprintAssignable, Category = "Time")
-  FOnTimeUpdated OnTimeUpdated;
+  FOnDayChangedSignature OnDayChanged;
 
+  // --- ОБЪЯВЛЯЕМ НОВЫЙ ДЕЛЕГАТ ---
   UPROPERTY(BlueprintAssignable, Category = "Time")
-  FOnDayChanged OnDayChanged;
+  FOnTimeUpdatedSignature OnTimeUpdated;
+
+  // --- ОБЪЯВЛЯЕМ НОВУЮ ФУНКЦИЮ ---
+  void GetCurrentDayInfo(int32 &OutDay, int32 &OutGoal) const;
 
 private:
-  // Переменные времени и экономики
-  UPROPERTY()
-  float DayDurationInSeconds = 1200.0f;
-
-  UPROPERTY()
-  float TimeElapsedInDay = 0.0f;
-
-  UPROPERTY()
-  int32 CurrentDay = 1;
-
-  UPROPERTY()
-  int32 CurrentDayIncome = 0;
-
-  UPROPERTY()
-  int32 CurrentDayGoal = 1000;
+  void TickSecond();
 
   UPROPERTY()
   TObjectPtr<UCurveFloat> DemandCurve;
 
-  FTimerHandle SecondTickTimerHandle;
+  float DayDurationInSeconds = 120.0f;
 
-  // Приватные функции
-  void TickSecond();
+  int32 CurrentDay = 1;
+  float TimeElapsedInDay = 0.0f;
+  int32 CurrentDayIncome = 0;
+  int32 CurrentDayGoal = 100;
+
+  FTimerHandle SecondTickTimerHandle;
 };

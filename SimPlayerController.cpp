@@ -40,6 +40,9 @@ void ASimPlayerController::BeginPlay() {
         GameHUD->SetMoney(Economy->GetCurrentBalance());
         Economy->OnBalanceChanged.AddDynamic(GameHUD,
                                              &UGameHUDWidget::SetMoney);
+        GameHUD->SetIncome(Economy->GetCurrentIncome());
+        Economy->OnIncomeChanged.AddDynamic(GameHUD,
+                                            &UGameHUDWidget::SetIncome);
       }
 
       if (UTimeManagerSubsystem *TimeManager =

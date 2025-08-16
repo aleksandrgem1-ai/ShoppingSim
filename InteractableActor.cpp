@@ -9,10 +9,10 @@ AInteractableActor::AInteractableActor() {
   RootComponent = Root;
 
   InteractionPromptText =
-      FString(TEXT("Взаимодействовать")); // Текст по умолчанию
+      FString(TEXT("To interact")); // Текст по умолчанию
 }
 
 // Базовая реализация. В дочерних классах мы будем её переопределять.
 void AInteractableActor::OnInteract(AController *Interactor) {
-  UE_LOG(LogTemp, Log, TEXT("'%s' был использован!"), *GetName());
+  UE_LOG(LogTemp, Log, TEXT("'%s' has been used!"), *GetName());
 }
