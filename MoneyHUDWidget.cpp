@@ -1,4 +1,4 @@
-﻿#include "MoneyHUDWidget.h"
+#include "UI/HUD/MoneyHUDWidget.h"
 #include "Components/TextBlock.h"
 
 void UMoneyHUDWidget::SetMoney(int32 NewValue) {
@@ -6,12 +6,12 @@ void UMoneyHUDWidget::SetMoney(int32 NewValue) {
 
   if (!MoneyText) {
     UE_LOG(LogTemp, Error,
-           TEXT("[HUD] MoneyText is nullptr – проверь BindWidget и имя в BP!"));
+           TEXT("[HUD] MoneyText is nullptr � ������� BindWidget � ��� � BP!"));
     return;
   }
 
-  // Форматируем текст с €
-  const FString Formatted = FString::Printf(TEXT("€%d"), NewValue);
+  // ����������� ����� � � 
+  const FString Formatted = FString::Printf(TEXT("�%d"), NewValue);
   MoneyText->SetText(FText::FromString(Formatted));
 
   UE_LOG(LogTemp, Warning, TEXT("[HUD] MoneyText updated to: %s"), *Formatted);

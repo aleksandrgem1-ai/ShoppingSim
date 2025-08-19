@@ -1,4 +1,4 @@
-// SaveLoadSubsystem.h (»—œ–¿¬À≈ÕÕ€…)
+// SaveLoadSubsystem.h (–ò–°–ü–†–ê–í–õ–ï–ù–ù–´–ô) 
 
 #pragma once
 
@@ -17,7 +17,7 @@ public:
   void SaveGame();
 
   UFUNCTION(BlueprintCallable,
-            Category = "SaveLoad") // <-- »—œ–¿¬À≈Õ¿ Œœ≈◊¿“ ¿ «ƒ≈—‹
+            Category = "SaveLoad") // <-- –ò–°–ü–†–ê–í–õ–ï–ù–ê –û–ü–ï–ß–ê–¢–ö–ê –ó–î–ï–°–¨
   void LoadGame();
 
 private:

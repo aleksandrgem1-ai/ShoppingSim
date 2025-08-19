@@ -1,6 +1,4 @@
-// InventoryComponent.h (НОВЫЙ ФАЙЛ)
-// Наследовать от UActorComponent
-
+// InventoryComponent.h (final)
 #pragma once
 
 #include "Components/ActorComponent.h"
@@ -16,16 +14,23 @@ class SHOPPINGSIM_API UInventoryComponent : public UActorComponent {
 public:
   UInventoryComponent();
 
-  // Пытается продать случайный товар из инвентаря. Возвращает выручку.
+  // РџС‹С‚Р°РµС‚СЃСЏ РїСЂРѕРґР°С‚СЊ СЃР»СѓС‡Р°Р№РЅС‹Р№ С‚РѕРІР°СЂ РёР· РёРЅРІРµРЅС‚Р°СЂСЏ. Р’РѕР·РІСЂР°С‰Р°РµС‚ РІС‹СЂСѓС‡РєСѓ (0, РµСЃР»Рё
+  // РЅРёС‡РµРіРѕ РЅРµ РїСЂРѕРґР°РЅРѕ).
   int32 SellRandomItem();
 
-  // (В будущем) Функция для добавления товара на полку
+  // Р”РѕР±Р°РІРёС‚СЊ С‚РѕРІР°СЂ РЅР° СЃРєР»Р°Рґ (СѓРІРµР»РёС‡РёС‚СЊ РєРѕР»РёС‡РµСЃС‚РІРѕ).
   void StockItem(UProductData *Product, int32 Quantity);
+
+  // РўРµРєСѓС‰РµРµ РєРѕР»РёС‡РµСЃС‚РІРѕ С‚РѕРІР°СЂР° (0, РµСЃР»Рё РЅРµС‚).
+  int32 GetQuantity(const UProductData *Product) const;
+
+  // РџРѕР»РЅС‹Р№ СЃРїРёСЃРѕРє РЅР°РёРјРµРЅРѕРІР°РЅРёР№ (РєР»СЋС‡Рё РёРЅРІРµРЅС‚Р°СЂСЏ).
+  void GetAllProducts(TArray<TObjectPtr<UProductData>> &OutProducts) const;
 
 protected:
   virtual void BeginPlay() override;
 
-  // "Склад" нашего объекта. Хранит, какой товар и в каком количестве лежит.
+  // РЎРєР»Р°Рґ: РўРѕРІР°СЂ -> РљРѕР»РёС‡РµСЃС‚РІРѕ
   UPROPERTY(VisibleAnywhere, Category = "Inventory")
   TMap<TObjectPtr<UProductData>, int32> Stock;
 };

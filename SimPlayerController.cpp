@@ -1,13 +1,14 @@
-// SimPlayerController.cpp (ÂÀØ ÔÀÉË, ÁÅÇ ÈÇÌÅÍÅÍÈÉ)
+// SimPlayerController.cpp
 
-#include "SimPlayerController.h"
+#include "Controllers/SimPlayerController.h"
 #include "Blueprint/UserWidget.h"
-#include "EconomySubsystem.h"
 #include "EnhancedInputSubsystems.h"
-#include "GameHUDWidget.h"
 #include "InputMappingContext.h"
-#include "SimSettings.h"
-#include "TimeManagerSubsystem.h"
+#include "Settings/SimSettings.h"
+#include "Subsystems/EconomySubsystem.h"
+#include "Subsystems/EventManagerSubsystem.h"
+#include "Subsystems/TimeManagerSubsystem.h"
+#include "UI/HUD/GameHUDWidget.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSimPC, Log, All);
 
@@ -28,7 +29,17 @@ ASimPlayerController::ASimPlayerController() {
 
 void ASimPlayerController::BeginPlay() {
   Super::BeginPlay();
+
   AddDefaultIMC();
+
+  // ÐŸÐ¾Ð´Ð¿Ð¸ÑÐºÐ° Ð½Ð° ÑÐ¾Ð±Ñ‹Ñ‚Ð¸Ñ
+  if (UEventManagerSubsystem *EMS =
+          GetWorld()->GetSubsystem<UEventManagerSubsystem>()) {
+    EMS->OnGameEvent.AddDynamic(this, &ASimPlayerController::HandleGameEvent);
+    UE_LOG(LogSimPC, Warning, TEXT("[PC] Subscribed to EMS.OnGameEvent"));
+  } else {
+    UE_LOG(LogSimPC, Error, TEXT("[PC] EMS is missing in this world"));
+  }
 
   if (GameHUDClass) {
     GameHUD = CreateWidget<UGameHUDWidget>(this, GameHUDClass);
@@ -51,7 +62,6 @@ void ASimPlayerController::BeginPlay() {
         TimeManager->GetCurrentDayInfo(Day, Goal);
         GameHUD->SetDayInfo(Day, Goal);
         GameHUD->SetTime(0, 0);
-
         TimeManager->OnTimeUpdated.AddDynamic(GameHUD,
                                               &UGameHUDWidget::SetTime);
       }
@@ -62,11 +72,16 @@ void ASimPlayerController::BeginPlay() {
 void ASimPlayerController::AddDefaultIMC() {
   if (!DefaultMappingContext)
     return;
+
   if (ULocalPlayer *LocalPlayer = GetLocalPlayer()) {
     if (auto *InputSubsystem =
             ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
                 LocalPlayer)) {
-      InputSubsystem->AddMappingContext(DefaultMappingContext, MappingPriority);
+      InputSubsystem->AddMappingContext(DefaultMappingContext, /*Priority*/ 0);
     }
   }
+}
+
+void ASimPlayerController::HandleGameEvent(const FText &EventText) {
+  UE_LOG(LogSimPC, Warning, TEXT("[PC] GameEvent: %s"), *EventText.ToString());
 }

@@ -1,4 +1,4 @@
-// MallSimSaveGame.h
+// MallSimSaveGame.h 
 
 #pragma once
 
@@ -6,16 +6,16 @@
 #include "GameFramework/SaveGame.h"
 #include "MallSimSaveGame.generated.h"
 
-// Структура для хранения данных о размещенной зоне
+// РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ С…СЂР°РЅРµРЅРёСЏ РґР°РЅРЅС‹С… Рѕ СЂР°Р·РјРµС‰РµРЅРЅРѕР№ Р·РѕРЅРµ
 USTRUCT(BlueprintType)
 struct FZoneSaveData {
   GENERATED_BODY()
 
-  // "Мягкий" путь к ассету DataAsset, чтобы сохранение было надежным
+  // "РњСЏРіРєРёР№" РїСѓС‚СЊ Рє Р°СЃСЃРµС‚Сѓ DataAsset, С‡С‚РѕР±С‹ СЃРѕС…СЂР°РЅРµРЅРёРµ Р±С‹Р»Рѕ РЅР°РґРµР¶РЅС‹Рј
   UPROPERTY()
   FSoftObjectPath ZoneDataPath;
 
-  // Позиция, поворот и масштаб зоны в мире
+  // РџРѕР·РёС†РёСЏ, РїРѕРІРѕСЂРѕС‚ Рё РјР°СЃС€С‚Р°Р± Р·РѕРЅС‹ РІ РјРёСЂРµ
   UPROPERTY()
   FTransform ZoneTransform;
 };

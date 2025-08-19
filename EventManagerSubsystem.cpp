@@ -1,41 +1,80 @@
-// EventManagerSubsystem.cpp (НОВЫЙ ФАЙЛ)
-
-#include "EventManagerSubsystem.h"
-#include "EconomySubsystem.h"
+#include "Subsystems/EventManagerSubsystem.h"
+#include "Actors/StoreZoneActor.h"
 #include "Kismet/GameplayStatics.h"
-#include "StoreZoneActor.h"
+#include "Settings/SimSettings.h"
+#include "Subsystems/EconomySubsystem.h"
 
 void UEventManagerSubsystem::Initialize(FSubsystemCollectionBase &Collection) {
   Super::Initialize(Collection);
-  // Каждые 60 секунд будем пытаться запустить событие
-  GetWorld()->GetTimerManager().SetTimer(
+
+  const USimSettings *Settings = GetDefault<USimSettings>();
+  float EventInterval = Settings ? Settings->RandomEventInterval : 60.0f;
+
+  UWorld *World = GetWorld();
+  if (!World) {
+    UE_LOG(LogTemp, Error, TEXT("[EMS] Initialize: World is null!"));
+    return;
+  }
+
+  UE_LOG(LogTemp, Warning, TEXT("[EMS] Initialize in world: %s"),
+         *World->GetName());
+
+  World->GetTimerManager().SetTimer(
       EventTimerHandle, this, &UEventManagerSubsystem::TryTriggerRandomEvent,
-      60.0f, true);
+      EventInterval, true);
+
+  UE_LOG(LogTemp, Warning, TEXT("[EMS] Timer started (interval=%fs)"),
+         EventInterval);
 }
 
 void UEventManagerSubsystem::Deinitialize() {
-  GetWorld()->GetTimerManager().ClearTimer(EventTimerHandle);
+  UWorld *World = GetWorld();
+
+  if (World) {
+    World->GetTimerManager().ClearTimer(EventTimerHandle);
+    UE_LOG(LogTemp, Warning, TEXT("[EMS] Deinitialize in world: %s"),
+           *World->GetName());
+  } else {
+    UE_LOG(LogTemp, Error, TEXT("[EMS] Deinitialize: World is null!"));
+  }
+
   Super::Deinitialize();
 }
 
+void UEventManagerSubsystem::EM_TestEvent() {
+  UE_LOG(LogTemp, Warning, TEXT("[EMS] EM_TestEvent called from console"));
+  TryTriggerRandomEvent();
+}
+
 void UEventManagerSubsystem::TryTriggerRandomEvent() {
-  // 20% шанс, что событие произойдет
-  if (FMath::RandRange(1, 5) == 1) {
-    // Выбираем, какое именно событие запустить
+  const USimSettings *Settings = GetDefault<USimSettings>();
+  float EventChance = Settings ? Settings->RandomEventChance : 0.2f;
+
+  UE_LOG(LogTemp, Log, TEXT("[EMS] TryTriggerRandomEvent (chance: %.2f)"),
+         EventChance);
+
+  if (FMath::FRand() <= EventChance) {
     if (FMath::RandBool()) {
       TriggerBreakdownEvent();
     } else {
       TriggerFineEvent();
     }
+  } else {
+    UE_LOG(LogTemp, Verbose, TEXT("[EMS] No event this tick"));
   }
 }
 
 void UEventManagerSubsystem::TriggerBreakdownEvent() {
-  TArray<AActor *> FoundZoneActors;
-  UGameplayStatics::GetAllActorsOfClass(
-      GetWorld(), AStoreZoneActor::StaticClass(), FoundZoneActors);
+  UWorld *World = GetWorld();
+  if (!World) {
+    UE_LOG(LogTemp, Error, TEXT("[EMS] TriggerBreakdownEvent: World is null!"));
+    return;
+  }
 
-  // Убираем уже сломанные объекты из списка кандидатов
+  TArray<AActor *> FoundZoneActors;
+  UGameplayStatics::GetAllActorsOfClass(World, AStoreZoneActor::StaticClass(),
+                                        FoundZoneActors);
+
   FoundZoneActors.RemoveAll([](const AActor *Actor) {
     const AStoreZoneActor *Zone = Cast<AStoreZoneActor>(Actor);
     return Zone && Zone->IsBroken();
@@ -44,29 +83,59 @@ void UEventManagerSubsystem::TriggerBreakdownEvent() {
   if (FoundZoneActors.Num() > 0) {
     AStoreZoneActor *ZoneToBreak = Cast<AStoreZoneActor>(
         FoundZoneActors[FMath::RandRange(0, FoundZoneActors.Num() - 1)]);
+
     if (ZoneToBreak) {
       ZoneToBreak->BreakDown();
+
       FText EventText = FText::Format(
           NSLOCTEXT("GameEvents", "BreakdownEvent",
-                    "Оборудование '{0}' сломалось! Требуется ремонт."),
+                    "РћР±РѕСЂСѓРґРѕРІР°РЅРёРµ '{0}' СЃР»РѕРјР°Р»РѕСЃСЊ! РўСЂРµР±СѓРµС‚СЃСЏ СЂРµРјРѕРЅС‚."),
           ZoneToBreak->GetZoneName());
+
       OnGameEvent.Broadcast(EventText);
-      UE_LOG(LogTemp, Warning, TEXT("%s"), *EventText.ToString());
+      UE_LOG(LogTemp, Warning, TEXT("[EMS] %s"), *EventText.ToString());
+    } else {
+      UE_LOG(LogTemp, Error,
+             TEXT("[EMS] ZoneToBreak is null after random select!"));
     }
+  } else {
+    UE_LOG(LogTemp, Verbose,
+           TEXT("[EMS] No valid zones available for breakdown event."));
   }
 }
 
 void UEventManagerSubsystem::TriggerFineEvent() {
-  if (UEconomySubsystem *Economy =
-          GetWorld()->GetGameInstance()->GetSubsystem<UEconomySubsystem>()) {
-    const int32 FineAmount = FMath::RandRange(50, 200);
-    if (Economy->TrySpendMoney(FineAmount)) {
-      FText EventText =
-          FText::Format(NSLOCTEXT("GameEvents", "FineEvent",
-                                  "Неожиданный штраф! Вы заплатили {0}€."),
-                        FText::AsNumber(FineAmount));
-      OnGameEvent.Broadcast(EventText);
-      UE_LOG(LogTemp, Warning, TEXT("%s"), *EventText.ToString());
-    }
+  UWorld *World = GetWorld();
+  if (!World) {
+    UE_LOG(LogTemp, Error, TEXT("[EMS] TriggerFineEvent: World is null!"));
+    return;
+  }
+
+  UGameInstance *GI = World->GetGameInstance();
+  if (!GI) {
+    UE_LOG(LogTemp, Error,
+           TEXT("[EMS] TriggerFineEvent: GameInstance is null!"));
+    return;
+  }
+
+  UEconomySubsystem *Economy = GI->GetSubsystem<UEconomySubsystem>();
+  if (!Economy) {
+    UE_LOG(LogTemp, Error,
+           TEXT("[EMS] TriggerFineEvent: EconomySubsystem is null!"));
+    return;
+  }
+
+  const int32 FineAmount = FMath::RandRange(50, 200);
+
+  if (Economy->TrySpendMoney(FineAmount)) {
+    FText EventText =
+        FText::Format(NSLOCTEXT("GameEvents", "FineEvent",
+                                "РќРµРѕР¶РёРґР°РЅРЅС‹Р№ С€С‚СЂР°С„! Р’С‹ Р·Р°РїР»Р°С‚РёР»Рё {0}Р."),
+                      FText::AsNumber(FineAmount));
+    OnGameEvent.Broadcast(EventText);
+    UE_LOG(LogTemp, Warning, TEXT("[EMS] %s"), *EventText.ToString());
+  } else {
+    UE_LOG(LogTemp, Warning, TEXT("[EMS] Fine %dР skipped: not enough funds"),
+           FineAmount);
   }
 }

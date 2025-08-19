@@ -1,13 +1,16 @@
-// BuildModePawn.cpp (ÏÎËÍÀß ÂÅÐÑÈß)
+// BuildModePawn.cpp (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ AimTraceService)
+#include "Pawns/BuildModePawn.h"
 
-#include "BuildModePawn.h"
-#include "BuildManagerSubsystem.h"
+#include "Subsystems/BuildManagerSubsystem.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "InputAction.h"
-#include "StoreZoneActor.h"
+#include "Actors/StoreZoneActor.h"
 #include "UObject/ConstructorHelpers.h"
+
+// ï¿½ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#include "Utils/AimTraceService.h"
 
 ABuildModePawn::ABuildModePawn() {
   PrimaryActorTick.bCanEverTick = true;
@@ -25,65 +28,67 @@ ABuildModePawn::ABuildModePawn() {
       CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComponent"));
   MovementComponent->UpdatedComponent = RootComponent;
 
+  // Input actions ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ AssetName.AssetName
   static ConstructorHelpers::FObjectFinder<UInputAction> MoveActionRef(
-      TEXT("/Game/AssetInput/Asset/IA_Move"));
+      TEXT("/Game/AssetInput/Asset/IA_Move.IA_Move"));
   if (MoveActionRef.Succeeded())
     MoveAction = MoveActionRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction> LookActionRef(
-      TEXT("/Game/AssetInput/Asset/IA_Look"));
+      TEXT("/Game/AssetInput/Asset/IA_Look.IA_Look"));
   if (LookActionRef.Succeeded())
     LookAction = LookActionRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction> FlyUpActionRef(
-      TEXT("/Game/AssetInput/Asset/IA_Build_FlyUp"));
+      TEXT("/Game/AssetInput/Asset/IA_Build_FlyUp.IA_Build_FlyUp"));
   if (FlyUpActionRef.Succeeded())
     FlyUpAction = FlyUpActionRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction> FlyDownActionRef(
-      TEXT("/Game/AssetInput/Asset/IA_Build_FlyDown"));
+      TEXT("/Game/AssetInput/Asset/IA_Build_FlyDown.IA_Build_FlyDown"));
   if (FlyDownActionRef.Succeeded())
     FlyDownAction = FlyDownActionRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction> PlaceActionRef(
-      TEXT("/Game/AssetInput/Asset/IA_Place"));
+      TEXT("/Game/AssetInput/Asset/IA_Place.IA_Place"));
   if (PlaceActionRef.Succeeded())
     PlaceAction = PlaceActionRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction> RemoveActionRef(
-      TEXT("/Game/AssetInput/Asset/IA_RemoveZone"));
+      TEXT("/Game/AssetInput/Asset/IA_RemoveZone.IA_RemoveZone"));
   if (RemoveActionRef.Succeeded())
     RemoveAction = RemoveActionRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction> DestroyActionRef(
-      TEXT("/Game/AssetInput/Asset/IA_Destroy"));
+      TEXT("/Game/AssetInput/Asset/IA_Destroy.IA_Destroy"));
   if (DestroyActionRef.Succeeded())
     DestroyAction = DestroyActionRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction> RotateActionRef(
-      TEXT("/Game/AssetInput/Asset/IA_Rotate"));
+      TEXT("/Game/AssetInput/Asset/IA_Rotate.IA_Rotate"));
   if (RotateActionRef.Succeeded())
     RotateAction = RotateActionRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction> ToggleGridActionRef(
-      TEXT("/Game/AssetInput/Asset/IA_ToggleGrid"));
+      TEXT("/Game/AssetInput/Asset/IA_ToggleGrid.IA_ToggleGrid"));
   if (ToggleGridActionRef.Succeeded())
     ToggleGridAction = ToggleGridActionRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction> ExitBuildModeActionRef(
-      TEXT("/Game/AssetInput/Asset/IA_ExitBuildMode"));
+      TEXT("/Game/AssetInput/Asset/IA_ExitBuildMode.IA_ExitBuildMode"));
   if (ExitBuildModeActionRef.Succeeded())
     ExitBuildModeAction = ExitBuildModeActionRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction>
       ToggleBuildModeActionRef(
-          TEXT("/Game/AssetInput/Asset/IA_ToggleBuildMode"));
+          TEXT("/Game/AssetInput/Asset/IA_ToggleBuildMode.IA_ToggleBuildMode"));
   if (ToggleBuildModeActionRef.Succeeded())
     ToggleBuildModeAction = ToggleBuildModeActionRef.Object;
 }
 
 void ABuildModePawn::BeginPlay() {
   Super::BeginPlay();
+
   if (UBuildManagerSubsystem *BuildManager =
           GetGameInstance()->GetSubsystem<UBuildManagerSubsystem>()) {
     BuildManager->StartPlacement();
@@ -92,6 +97,7 @@ void ABuildModePawn::BeginPlay() {
 
 void ABuildModePawn::Tick(float DeltaTime) {
   Super::Tick(DeltaTime);
+
   if (UBuildManagerSubsystem *BuildManager =
           GetGameInstance()->GetSubsystem<UBuildManagerSubsystem>()) {
     BuildManager->UpdateGhostActorTransform();
@@ -101,6 +107,7 @@ void ABuildModePawn::Tick(float DeltaTime) {
 void ABuildModePawn::SetupPlayerInputComponent(
     UInputComponent *PlayerInputComponent) {
   Super::SetupPlayerInputComponent(PlayerInputComponent);
+
   if (UEnhancedInputComponent *EIC =
           Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
     if (MoveAction)
@@ -130,7 +137,6 @@ void ABuildModePawn::SetupPlayerInputComponent(
     if (ToggleGridAction)
       EIC->BindAction(ToggleGridAction, ETriggerEvent::Started, this,
                       &ABuildModePawn::HandleToggleGrid);
-
     if (ExitBuildModeAction)
       EIC->BindAction(ExitBuildModeAction, ETriggerEvent::Started, this,
                       &ABuildModePawn::HandleExitBuildMode);
@@ -143,14 +149,11 @@ void ABuildModePawn::SetupPlayerInputComponent(
 void ABuildModePawn::Move(const FInputActionValue &Value) {
   const FVector2D Input2D = Value.Get<FVector2D>();
   if (Controller && (Input2D.X != 0.f || Input2D.Y != 0.f)) {
-    const FRotator Rotation = Controller->GetControlRotation();
-    const FRotator YawRotation(0, Rotation.Yaw, 0);
-
+    const FRotator Rotation(0, Controller->GetControlRotation().Yaw, 0);
     const FVector ForwardDirection =
-        FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+        FRotationMatrix(Rotation).GetUnitAxis(EAxis::X);
     const FVector RightDirection =
-        FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
+        FRotationMatrix(Rotation).GetUnitAxis(EAxis::Y);
     AddMovementInput(ForwardDirection, Input2D.Y);
     AddMovementInput(RightDirection, Input2D.X);
   }
@@ -164,11 +167,11 @@ void ABuildModePawn::Look(const FInputActionValue &Value) {
   }
 }
 
-void ABuildModePawn::HandleFlyUp(const FInputActionValue &Value) {
+void ABuildModePawn::HandleFlyUp(const FInputActionValue & /*Value*/) {
   AddMovementInput(FVector::UpVector, 1.0f);
 }
 
-void ABuildModePawn::HandleFlyDown(const FInputActionValue &Value) {
+void ABuildModePawn::HandleFlyDown(const FInputActionValue & /*Value*/) {
   AddMovementInput(FVector::DownVector, 1.0f);
 }
 
@@ -183,12 +186,15 @@ void ABuildModePawn::HandleRemove() {
   APlayerController *PC = GetController<APlayerController>();
   if (!PC)
     return;
-  FVector Start, Dir;
-  PC->DeprojectMousePositionToWorld(Start, Dir);
-  FVector End = Start + (Dir * 10000.f);
+
+  TArray<const AActor *> Ignore;
+  Ignore.Add(this);
+
   FHitResult HitResult;
-  GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility);
-  if (HitResult.bBlockingHit) {
+  const bool bHit = FAimTraceService::TraceFromScreenCenter(
+      GetWorld(), PC, 15000.f, ECC_Visibility, Ignore, HitResult);
+
+  if (bHit) {
     if (AStoreZoneActor *ZoneToInteract =
             Cast<AStoreZoneActor>(HitResult.GetActor())) {
       if (UBuildManagerSubsystem *BuildManager =
@@ -203,12 +209,15 @@ void ABuildModePawn::HandleDestroy() {
   APlayerController *PC = GetController<APlayerController>();
   if (!PC)
     return;
-  FVector Start, Dir;
-  PC->DeprojectMousePositionToWorld(Start, Dir);
-  FVector End = Start + (Dir * 10000.f);
+
+  TArray<const AActor *> Ignore;
+  Ignore.Add(this);
+
   FHitResult HitResult;
-  GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility);
-  if (HitResult.bBlockingHit) {
+  const bool bHit = FAimTraceService::TraceFromScreenCenter(
+      GetWorld(), PC, 15000.f, ECC_Visibility, Ignore, HitResult);
+
+  if (bHit) {
     if (AStoreZoneActor *ZoneToDestroy =
             Cast<AStoreZoneActor>(HitResult.GetActor())) {
       if (UBuildManagerSubsystem *BuildManager =

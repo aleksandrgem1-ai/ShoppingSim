@@ -1,18 +1,18 @@
-// InteractableActor.cpp
-#include "InteractableActor.h"
+// InteractableActor.cpp 
+#include "Actors/InteractableActor.h"
 
 AInteractableActor::AInteractableActor() {
   PrimaryActorTick.bCanEverTick = false;
 
-  // Инициализируем корневой компонент
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   Root = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
   RootComponent = Root;
 
   InteractionPromptText =
-      FString(TEXT("To interact")); // Текст по умолчанию
+      FString(TEXT("To interact")); // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 }
 
-// Базовая реализация. В дочерних классах мы будем её переопределять.
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 void AInteractableActor::OnInteract(AController *Interactor) {
   UE_LOG(LogTemp, Log, TEXT("'%s' has been used!"), *GetName());
 }

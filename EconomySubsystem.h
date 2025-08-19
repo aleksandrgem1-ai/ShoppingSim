@@ -6,11 +6,11 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "EconomySubsystem.generated.h"
 
-// Баланс
+// Р‘Р°Р»Р°РЅСЃ 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBalanceChangedSignature, int32,
                                             NewBalance);
 
-// Доход (за текущий день/период)
+// Р”РѕС…РѕРґ (Р·Р° С‚РµРєСѓС‰РёР№ РґРµРЅСЊ/РїРµСЂРёРѕРґ)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnIncomeChangedSignature, int32,
                                             NewIncome);
 
@@ -19,27 +19,27 @@ class SHOPPINGSIM_API UEconomySubsystem : public UGameInstanceSubsystem {
   GENERATED_BODY()
 
 public:
-  // Начислить деньги (увеличивает баланс и доход)
+  // РќР°С‡РёСЃР»РёС‚СЊ РґРµРЅСЊРіРё (СѓРІРµР»РёС‡РёРІР°РµС‚ Р±Р°Р»Р°РЅСЃ Рё РґРѕС…РѕРґ)
   UFUNCTION(BlueprintCallable, Category = "Economy")
   void AddMoney(int32 Amount);
 
-  // Потратить деньги. Возвращает true, если успешно
+  // РџРѕС‚СЂР°С‚РёС‚СЊ РґРµРЅСЊРіРё. Р’РѕР·РІСЂР°С‰Р°РµС‚ true, РµСЃР»Рё СѓСЃРїРµС€РЅРѕ
   UFUNCTION(BlueprintCallable, Category = "Economy")
   bool TrySpendMoney(int32 Amount);
 
-  // Получить текущий баланс
+  // РџРѕР»СѓС‡РёС‚СЊ С‚РµРєСѓС‰РёР№ Р±Р°Р»Р°РЅСЃ
   UFUNCTION(BlueprintPure, Category = "Economy")
   int32 GetCurrentBalance() const;
 
-  // Получить текущий доход за период
+  // РџРѕР»СѓС‡РёС‚СЊ С‚РµРєСѓС‰РёР№ РґРѕС…РѕРґ Р·Р° РїРµСЂРёРѕРґ
   UFUNCTION(BlueprintPure, Category = "Economy")
   int32 GetCurrentIncome() const;
 
-  // Сбросить доход (например, в начале нового дня)
+  // РЎР±СЂРѕСЃРёС‚СЊ РґРѕС…РѕРґ (РЅР°РїСЂРёРјРµСЂ, РІ РЅР°С‡Р°Р»Рµ РЅРѕРІРѕРіРѕ РґРЅСЏ)
   UFUNCTION(BlueprintCallable, Category = "Economy")
   void ResetIncome();
 
-  // Делегаты для UI
+  // Р”РµР»РµРіР°С‚С‹ РґР»СЏ UI
   UPROPERTY(BlueprintAssignable, Category = "Economy")
   FOnBalanceChangedSignature OnBalanceChanged;
 

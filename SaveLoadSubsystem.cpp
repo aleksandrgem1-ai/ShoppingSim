@@ -1,19 +1,19 @@
-// SaveLoadSubsystem.cpp (ÈÑÏÐÀÂËÅÍÍÛÉ)
-
-#include "SaveLoadSubsystem.h"
-#include "EconomySubsystem.h"
+// SaveLoadSubsystem.cpp (save result log added)
+#include "Subsystems/SaveLoadSubsystem.h"
+#include "Subsystems/EconomySubsystem.h"
 #include "Kismet/GameplayStatics.h"
-#include "MallSimSaveGame.h"
-#include "StoreZoneActor.h"
-#include "StoreZoneData.h"
+#include "Data/MallSimSaveGame.h"
+#include "Actors/StoreZoneActor.h"
+#include "Data/StoreZoneData.h"
 
 void USaveLoadSubsystem::Initialize(FSubsystemCollectionBase &Collection) {
   Super::Initialize(Collection);
 
-  const float AutosaveInterval = 300.0f; // 5 ìèíóò
+  const float AutosaveInterval = 300.0f; // 5 ï¿½ï¿½ï¿½ï¿½ï¿½
   GetGameInstance()->GetTimerManager().SetTimer(AutosaveTimerHandle, this,
                                                 &USaveLoadSubsystem::SaveGame,
                                                 AutosaveInterval, true);
+
   UE_LOG(LogTemp, Log, TEXT("Autosave timer started. Interval: %f seconds."),
          AutosaveInterval);
 }
@@ -24,9 +24,8 @@ void USaveLoadSubsystem::SaveGame() {
   if (!SaveGameInstance)
     return;
 
-  UEconomySubsystem *EconomySubsystem =
-      GetGameInstance()->GetSubsystem<UEconomySubsystem>();
-  if (EconomySubsystem) {
+  if (UEconomySubsystem *EconomySubsystem =
+          GetGameInstance()->GetSubsystem<UEconomySubsystem>()) {
     SaveGameInstance->PlayerMoney = EconomySubsystem->GetCurrentBalance();
   }
 
@@ -34,21 +33,23 @@ void USaveLoadSubsystem::SaveGame() {
   if (UWorld *World = GetGameInstance()->GetWorld()) {
     UGameplayStatics::GetAllActorsOfClass(World, AStoreZoneActor::StaticClass(),
                                           FoundZones);
-  }
-  SaveGameInstance->PlacedZones.Empty();
 
-  for (AActor *Actor : FoundZones) {
-    AStoreZoneActor *Zone = Cast<AStoreZoneActor>(Actor);
-    if (Zone && Zone->ZoneData) {
-      FZoneSaveData ZoneDataToSave;
-      ZoneDataToSave.ZoneDataPath = FSoftObjectPath(Zone->ZoneData);
-      ZoneDataToSave.ZoneTransform = Zone->GetActorTransform();
-      SaveGameInstance->PlacedZones.Add(ZoneDataToSave);
+    SaveGameInstance->PlacedZones.Empty();
+    for (AActor *Actor : FoundZones) {
+      AStoreZoneActor *Zone = Cast<AStoreZoneActor>(Actor);
+      if (Zone && Zone->ZoneData) {
+        FZoneSaveData ZoneDataToSave;
+        ZoneDataToSave.ZoneDataPath = FSoftObjectPath(Zone->ZoneData);
+        ZoneDataToSave.ZoneTransform = Zone->GetActorTransform();
+        SaveGameInstance->PlacedZones.Add(ZoneDataToSave);
+      }
     }
   }
 
-  UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, 0);
-  UE_LOG(LogTemp, Warning, TEXT("Game Saved! (Autosave or manual)"));
+  const bool bOk =
+      UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, 0);
+  UE_LOG(LogTemp, Warning, TEXT("Game Save %s (slot: %s)"),
+         bOk ? TEXT("OK") : TEXT("FAILED"), *SaveSlotName);
 }
 
 void USaveLoadSubsystem::LoadGame() {
@@ -59,9 +60,8 @@ void USaveLoadSubsystem::LoadGame() {
     return;
   }
 
-  UEconomySubsystem *EconomySubsystem =
-      GetGameInstance()->GetSubsystem<UEconomySubsystem>();
-  if (EconomySubsystem) {
+  if (UEconomySubsystem *EconomySubsystem =
+          GetGameInstance()->GetSubsystem<UEconomySubsystem>()) {
     EconomySubsystem->TrySpendMoney(EconomySubsystem->GetCurrentBalance());
     EconomySubsystem->AddMoney(LoadedGame->PlayerMoney);
   }

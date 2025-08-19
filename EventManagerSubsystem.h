@@ -1,14 +1,12 @@
-// EventManagerSubsystem.h(НОВЫЙ ФАЙЛ)
-
+// EventManagerSubsystem.h (add Exec)
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "EventManagerSubsystem.generated.h"
 
-    // Делегат для оповещения UI о событии
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameEventSignature,
-                                                const FText &, EventText);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameEventSignature,
+                                            const FText &, EventText);
 
 UCLASS()
 class SHOPPINGSIM_API UEventManagerSubsystem : public UWorldSubsystem {
@@ -21,10 +19,14 @@ public:
   UPROPERTY(BlueprintAssignable, Category = "Events")
   FOnGameEventSignature OnGameEvent;
 
+  // РљРѕРЅСЃРѕР»СЊРЅР°СЏ РєРѕРјР°РЅРґР° РґР»СЏ СЂСѓС‡РЅРѕР№ РїСЂРѕРІРµСЂРєРё (РІ PIE/Standalone)
+  UFUNCTION(Exec)
+  void EM_TestEvent();
+
 private:
   void TryTriggerRandomEvent();
 
-  // --- Типы событий ---
+  // --- РўРёРїС‹ СЃРѕР±С‹С‚РёР№ ---
   void TriggerBreakdownEvent();
   void TriggerFineEvent();
 

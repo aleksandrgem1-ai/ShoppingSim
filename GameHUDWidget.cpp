@@ -1,41 +1,50 @@
-#include "GameHUDWidget.h"
-#include "ClockWidget.h"
-#include "DayInfoWidget.h"
-#include "MoneyHUDWidget.h"
+// GameHUDWidget.cpp
+#include "UI/HUD/GameHUDWidget.h"
+#include "Subsystems/EconomySubsystem.h"
+#include "Subsystems/TimeManagerSubsystem.h"
+#include "UI/HUD/ClockWidget.h"
+#include "UI/HUD/DayInfoWidget.h"
+#include "UI/HUD/MoneyHUDWidget.h"
 
-void UGameHUDWidget::NativeConstruct() {
-  Super::NativeConstruct();
-  // «десь можно добавить проверочные логи, если нужно
+void UGameHUDWidget::NativeConstruct() { Super::NativeConstruct(); }
+
+void UGameHUDWidget::NativeDestruct() {
+  if (UWorld *World = GetWorld()) {
+    if (UEconomySubsystem *Economy =
+            World->GetGameInstance()->GetSubsystem<UEconomySubsystem>()) {
+      Economy->OnBalanceChanged.RemoveDynamic(this, &UGameHUDWidget::SetMoney);
+      Economy->OnIncomeChanged.RemoveDynamic(this, &UGameHUDWidget::SetIncome);
+    }
+
+    if (UTimeManagerSubsystem *TimeManager =
+            World->GetSubsystem<UTimeManagerSubsystem>()) {
+      TimeManager->OnTimeUpdated.RemoveDynamic(this, &UGameHUDWidget::SetTime);
+    }
+  }
+
+  Super::NativeDestruct();
 }
 
 void UGameHUDWidget::SetMoney(int32 NewValue) {
   if (MoneyHUDWidget) {
     MoneyHUDWidget->SetMoney(NewValue);
-  } else {
-    UE_LOG(LogTemp, Warning, TEXT("[HUD] MoneyHUDWidget is nullptr"));
   }
 }
 
 void UGameHUDWidget::SetDayInfo(int32 Day, int32 Goal) {
   if (DayInfoWidget) {
     DayInfoWidget->SetDayInfo(Day, Goal);
-  } else {
-    UE_LOG(LogTemp, Warning, TEXT("[HUD] DayInfoWidget is nullptr"));
   }
 }
 
 void UGameHUDWidget::SetTime(int32 Hour, int32 Minute) {
   if (ClockWidget) {
     ClockWidget->SetTime(Hour, Minute);
-  } else {
-    UE_LOG(LogTemp, Warning, TEXT("[HUD] ClockWidget is nullptr"));
   }
 }
 
 void UGameHUDWidget::SetIncome(int32 NewIncome) {
   if (DayInfoWidget) {
     DayInfoWidget->SetIncome(NewIncome);
-  } else {
-    UE_LOG(LogTemp, Warning, TEXT("[HUD] DayInfoWidget is nullptr (Income)"));
   }
 }

@@ -1,14 +1,15 @@
-// BuildManagerSubsystem.cpp (ÏÎËÍÀß ÂÅÐÑÈß)
-
-#include "BuildManagerSubsystem.h"
-#include "BuildModePawn.h"
-#include "EconomySubsystem.h"
+// BuildManagerSubsystem.cpp
+#include "Subsystems/BuildManagerSubsystem.h"
+#include "Actors/StoreZoneActor.h"
+#include "Data/StoreZoneData.h"
+#include "Subsystems/EconomySubsystem.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/PlayerController.h"
 #include "InputMappingContext.h"
 #include "Kismet/GameplayStatics.h"
-#include "StoreZoneActor.h"
-#include "StoreZoneData.h"
+#include "Pawns/BuildModePawn.h"
+#include "Settings/SimSettings.h"
+#include "Utils/AimTraceService.h"
 
 void UBuildManagerSubsystem::Initialize(FSubsystemCollectionBase &Collection) {
   Super::Initialize(Collection);
@@ -22,18 +23,15 @@ void UBuildManagerSubsystem::Initialize(FSubsystemCollectionBase &Collection) {
   TestZoneToBuild = Cast<UStoreZoneData>(
       StaticLoadObject(UStoreZoneData::StaticClass(), nullptr,
                        TEXT("/Game/Data/Zones/DA_TestZone.DA_TestZone")));
-
   BuildModePawnClass = ABuildModePawn::StaticClass();
 }
 
 void UBuildManagerSubsystem::ToggleBuildMode() {
   bIsInBuildMode = !bIsInBuildMode;
-
-  if (bIsInBuildMode) {
+  if (bIsInBuildMode)
     EnterBuildMode();
-  } else {
+  else
     ExitBuildMode();
-  }
 }
 
 void UBuildManagerSubsystem::EnterBuildMode() {
@@ -42,16 +40,27 @@ void UBuildManagerSubsystem::EnterBuildMode() {
     return;
 
   OriginalPlayerPawn = PC->GetPawn();
-  if (OriginalPlayerPawn) {
+  if (IsValid(OriginalPlayerPawn))
     OriginalPlayerPawn->DisableInput(PC);
-  }
 
   FActorSpawnParameters SpawnParams;
   SpawnParams.Owner = PC;
-  APawn *BuildPawn = GetWorld()->SpawnActor<APawn>(
-      BuildModePawnClass, OriginalPlayerPawn->GetActorLocation(),
-      OriginalPlayerPawn->GetActorRotation(), SpawnParams);
-  PC->Possess(BuildPawn);
+  SpawnParams.SpawnCollisionHandlingOverride =
+      ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+  const FVector SpawnLoc = IsValid(OriginalPlayerPawn)
+                               ? OriginalPlayerPawn->GetActorLocation()
+                               : FVector::ZeroVector;
+  const FRotator SpawnRot = IsValid(OriginalPlayerPawn)
+                                ? OriginalPlayerPawn->GetActorRotation()
+                                : FRotator::ZeroRotator;
+
+  SpawnedBuildPawn = GetWorld()->SpawnActor<APawn>(BuildModePawnClass, SpawnLoc,
+                                                   SpawnRot, SpawnParams);
+  if (!IsValid(SpawnedBuildPawn))
+    return;
+
+  PC->Possess(SpawnedBuildPawn);
 
   if (UEnhancedInputLocalPlayerSubsystem *Subsystem =
           ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
@@ -59,7 +68,7 @@ void UBuildManagerSubsystem::EnterBuildMode() {
     if (PlayerMappingContext)
       Subsystem->RemoveMappingContext(PlayerMappingContext);
     if (BuildModeMappingContext)
-      Subsystem->AddMappingContext(BuildModeMappingContext, 0);
+      Subsystem->AddMappingContext(BuildModeMappingContext, /*Priority*/ 1);
   }
 }
 
@@ -70,15 +79,15 @@ void UBuildManagerSubsystem::ExitBuildMode() {
   if (!PC)
     return;
 
-  if (APawn *CurrentPawn = PC->GetPawn()) {
-    CurrentPawn->Destroy();
+  if (IsValid(SpawnedBuildPawn) && PC->GetPawn() == SpawnedBuildPawn) {
+    SpawnedBuildPawn->Destroy();
+    SpawnedBuildPawn = nullptr;
   }
 
-  if (OriginalPlayerPawn) {
+  if (IsValid(OriginalPlayerPawn)) {
     PC->Possess(OriginalPlayerPawn);
     OriginalPlayerPawn->EnableInput(PC);
-    OriginalPlayerPawn =
-        nullptr; // Ñáðàñûâàåì óêàçàòåëü, ÷òîáû èçáåæàòü ïðîáëåì
+    OriginalPlayerPawn = nullptr;
   }
 
   if (UEnhancedInputLocalPlayerSubsystem *Subsystem =
@@ -87,13 +96,14 @@ void UBuildManagerSubsystem::ExitBuildMode() {
     if (BuildModeMappingContext)
       Subsystem->RemoveMappingContext(BuildModeMappingContext);
     if (PlayerMappingContext)
-      Subsystem->AddMappingContext(PlayerMappingContext, 0);
+      Subsystem->AddMappingContext(PlayerMappingContext, /*Priority*/ 0);
   }
 }
 
 void UBuildManagerSubsystem::StartPlacement() {
   if (GhostActor) {
     GhostActor->Destroy();
+    GhostActor = nullptr;
   }
 
   if (TestZoneToBuild) {
@@ -110,31 +120,48 @@ void UBuildManagerSubsystem::UpdateGhostActorTransform() {
   if (!GhostActor)
     return;
 
+  const USimSettings *Settings = GetDefault<USimSettings>();
+  const float TraceDistance = Settings ? Settings->TraceDistanceBuild : 15000.f;
+  const ECollisionChannel TraceChannel =
+      Settings ? Settings->TraceChannelBuild.GetValue() : ECC_Visibility;
+  const float GridSize = Settings ? Settings->GridSize : 100.f;
+  const float ZOffset = Settings ? Settings->PlacementZOffset : 0.f;
+  const bool bAlignToSurface = Settings ? Settings->bAlignToSurface : false;
+
   APlayerController *PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
   if (!PC)
     return;
 
-  FVector Start, Dir;
-  PC->DeprojectMousePositionToWorld(Start, Dir);
-  FVector End = Start + (Dir * 10000.f);
+  TArray<const AActor *> Ignore;
+  Ignore.Add(GhostActor);
+  if (APawn *Pawn = PC->GetPawn())
+    Ignore.Add(Pawn);
 
   FHitResult HitResult;
-  FCollisionQueryParams QueryParams;
-  QueryParams.AddIgnoredActor(GhostActor);
-  QueryParams.AddIgnoredActor(PC->GetPawn());
+  const bool bHit = FAimTraceService::TraceFromScreenCenter(
+      GetWorld(), PC, TraceDistance, TraceChannel, Ignore, HitResult, false);
 
-  GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility,
-                                       QueryParams);
+  FVector Start, End;
+  FAimTraceService::MakeScreenCenterRay(PC, TraceDistance, Start, End);
 
-  FVector TargetLocation = HitResult.bBlockingHit ? HitResult.Location : End;
+  FVector TargetLocation = bHit ? HitResult.Location : End;
+  if (bHit && bAlignToSurface) {
+    // Ð’Ñ‹Ñ€Ð°Ð²Ð½Ð¸Ð²Ð°ÐµÐ¼ Ð¿Ð¾ Ð½Ð¾Ñ€Ð¼Ð°Ð»Ð¸ â€” Ð²Ñ€Ð°Ñ‰Ð°ÐµÐ¼ Ð²Ð¾ÐºÑ€ÑƒÐ³ Ð¾ÑÐ¸, Ñ‡Ñ‚Ð¾Ð±Ñ‹ Z ÑÐ¾Ð²Ð¿Ð°Ð» Ñ Ð½Ð¾Ñ€Ð¼Ð°Ð»ÑŒÑŽ
+    const FRotator SurfaceRot = HitResult.Normal.ToOrientationRotator();
+    const FRotator UserYaw(0.f, CurrentPlacementRotation, 0.f);
+    const FRotator FinalRot = FRotator(SurfaceRot.Pitch, UserYaw.Yaw, 0.f);
+    TargetLocation.Z += ZOffset;
+    GhostActor->SetActorTransform(FTransform(FinalRot, TargetLocation));
+    return;
+  }
 
   if (bIsGridSnappingEnabled) {
-    const float GridSize = 100.0f;
     TargetLocation.X = FMath::GridSnap(TargetLocation.X, GridSize);
     TargetLocation.Y = FMath::GridSnap(TargetLocation.Y, GridSize);
   }
+  TargetLocation.Z += ZOffset;
 
-  FRotator TargetRotation(0, CurrentPlacementRotation, 0);
+  const FRotator TargetRotation(0.f, CurrentPlacementRotation, 0.f);
   GhostActor->SetActorTransform(FTransform(TargetRotation, TargetLocation));
 }
 
@@ -142,16 +169,17 @@ void UBuildManagerSubsystem::ConfirmPlacement() {
   if (!GhostActor || !TestZoneToBuild)
     return;
 
-  UEconomySubsystem *Economy =
-      GetGameInstance()->GetSubsystem<UEconomySubsystem>();
-  if (Economy && Economy->TrySpendMoney(TestZoneToBuild->Cost)) {
-    AStoreZoneActor *NewZone = GetWorld()->SpawnActor<AStoreZoneActor>(
-        AStoreZoneActor::StaticClass(), GhostActor->GetActorTransform());
-    if (NewZone) {
-      NewZone->ZoneData = TestZoneToBuild;
-      NewZone->PostInitializeComponents();
+  if (UEconomySubsystem *Economy =
+          GetGameInstance()->GetSubsystem<UEconomySubsystem>()) {
+    if (Economy->TrySpendMoney(TestZoneToBuild->Cost)) {
+      AStoreZoneActor *NewZone = GetWorld()->SpawnActor<AStoreZoneActor>(
+          AStoreZoneActor::StaticClass(), GhostActor->GetActorTransform());
+      if (NewZone) {
+        NewZone->ZoneData = TestZoneToBuild;
+        NewZone->PostInitializeComponents();
+      }
+      CurrentPlacementRotation = 0.f;
     }
-    CurrentPlacementRotation = 0.f;
   }
 }
 
@@ -163,17 +191,16 @@ void UBuildManagerSubsystem::CancelPlacement() {
 }
 
 void UBuildManagerSubsystem::SelectObjectForMove(AStoreZoneActor *ZoneToMove) {
-  if (!ZoneToMove || GhostActor) {
+  if (!ZoneToMove || GhostActor)
     return;
-  }
 
   TestZoneToBuild = ZoneToMove->ZoneData;
   StartPlacement();
 
-  UEconomySubsystem *Economy =
-      GetGameInstance()->GetSubsystem<UEconomySubsystem>();
-  if (Economy && ZoneToMove->ZoneData) {
-    Economy->AddMoney(ZoneToMove->ZoneData->Cost);
+  if (UEconomySubsystem *Economy =
+          GetGameInstance()->GetSubsystem<UEconomySubsystem>()) {
+    if (ZoneToMove->ZoneData)
+      Economy->AddMoney(ZoneToMove->ZoneData->Cost);
   }
 
   ZoneToMove->Destroy();
@@ -183,9 +210,8 @@ void UBuildManagerSubsystem::HandleDestruction(AStoreZoneActor *ZoneToDestroy) {
   if (!ZoneToDestroy || !ZoneToDestroy->ZoneData)
     return;
 
-  UEconomySubsystem *Economy =
-      GetGameInstance()->GetSubsystem<UEconomySubsystem>();
-  if (Economy) {
+  if (UEconomySubsystem *Economy =
+          GetGameInstance()->GetSubsystem<UEconomySubsystem>()) {
     const int32 RefundAmount =
         FMath::RoundToInt(ZoneToDestroy->ZoneData->Cost * 0.75f);
     Economy->AddMoney(RefundAmount);

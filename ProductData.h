@@ -1,5 +1,5 @@
-// ProductData.h (НОВЫЙ ФАЙЛ)
-// Наследовать от UPrimaryDataAsset
+// ProductData.h (РќРћР’Р«Р™ Р¤РђР™Р›)
+// РќР°СЃР»РµРґРѕРІР°С‚СЊ РѕС‚ UPrimaryDataAsset 
 
 #pragma once
 
@@ -12,15 +12,15 @@ class SHOPPINGSIM_API UProductData : public UPrimaryDataAsset {
   GENERATED_BODY()
 
 public:
-  // Имя товара для UI
+  // РРјСЏ С‚РѕРІР°СЂР° РґР»СЏ UI
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Product")
   FText ProductName;
 
-  // Цена, по которой мы закупаем товар у поставщика
+  // Р¦РµРЅР°, РїРѕ РєРѕС‚РѕСЂРѕР№ РјС‹ Р·Р°РєСѓРїР°РµРј С‚РѕРІР°СЂ Сѓ РїРѕСЃС‚Р°РІС‰РёРєР°
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Product")
   int32 PurchasePrice = 10;
 
-  // Цена, по которой мы продаем товар покупателям
+  // Р¦РµРЅР°, РїРѕ РєРѕС‚РѕСЂРѕР№ РјС‹ РїСЂРѕРґР°РµРј С‚РѕРІР°СЂ РїРѕРєСѓРїР°С‚РµР»СЏРј
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Product")
   int32 SalePrice = 15;
 };

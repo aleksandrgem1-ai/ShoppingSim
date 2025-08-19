@@ -1,20 +1,29 @@
-// TimeManagerSubsystem.cpp
+// TimeManagerSubsystem.cpp (fixed minimal)
+#include "Subsystems/TimeManagerSubsystem.h"
 
-#include "TimeManagerSubsystem.h"
 #include "Curves/CurveFloat.h"
-#include "EconomySubsystem.h"
-#include "InventoryComponent.h"
+#include "Subsystems/EconomySubsystem.h"
+#include "Components/InventoryComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "StoreZoneActor.h"
+#include "Settings/SimSettings.h"
+#include "Actors/StoreZoneActor.h"
 
 void UTimeManagerSubsystem::Initialize(FSubsystemCollectionBase &Collection) {
   Super::Initialize(Collection);
+
+  if (const USimSettings *Settings = GetDefault<USimSettings>()) {
+    DayDurationInSeconds = FMath::Max(60.f, Settings->DayDurationInSeconds);
+  }
+
   DemandCurve = Cast<UCurveFloat>(
       StaticLoadObject(UCurveFloat::StaticClass(), nullptr,
                        TEXT("/Game/Data/Curves/C_DemandCurve.C_DemandCurve")));
+
+  const float TickInterval =
+      1.0f; // ÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩ Settings->TimeTickInterval ÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
   GetWorld()->GetTimerManager().SetTimer(SecondTickTimerHandle, this,
                                          &UTimeManagerSubsystem::TickSecond,
-                                         1.0f, true);
+                                         TickInterval, true);
 }
 
 void UTimeManagerSubsystem::Deinitialize() {
@@ -24,11 +33,11 @@ void UTimeManagerSubsystem::Deinitialize() {
 
 void UTimeManagerSubsystem::TickSecond() {
   TimeElapsedInDay++;
-
   const float DayProgress = TimeElapsedInDay / DayDurationInSeconds;
   const int32 CurrentHour = FMath::FloorToInt(DayProgress * 24.0f);
   const int32 CurrentMinute =
       FMath::FloorToInt(FMath::Fmod(DayProgress * 24.0f * 60.0f, 60.0f));
+
   OnTimeUpdated.Broadcast(CurrentHour, CurrentMinute);
 
   TArray<AActor *> FoundZoneActors;
@@ -67,16 +76,17 @@ void UTimeManagerSubsystem::TickSecond() {
   if (TimeElapsedInDay >= DayDurationInSeconds) {
     const int32 PreviousDayIncome = CurrentDayIncome;
     const int32 PreviousDayGoal = CurrentDayGoal;
+
     CurrentDay++;
     TimeElapsedInDay = 0.0f;
     CurrentDayIncome = 0;
     CurrentDayGoal = FMath::RoundToInt(PreviousDayGoal * 1.5f);
+
     OnDayChanged.Broadcast(CurrentDay, PreviousDayIncome, PreviousDayGoal,
                            CurrentDayGoal);
   }
 }
 
-// --- »—œ–¿¬À≈Õ»≈: ƒŒ¡¿¬À≈Õ¿ –≈¿À»«¿÷»ﬂ Õ≈ƒŒ—“¿ﬁŸ≈… ‘”Õ ÷»» ---
 void UTimeManagerSubsystem::GetCurrentDayInfo(int32 &OutDay,
                                               int32 &OutGoal) const {
   OutDay = CurrentDay;

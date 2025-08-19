@@ -1,8 +1,8 @@
-// CashRegister.cpp (ÎÁÍÎÂËÅÍÍÛÉ)
+// CashRegister.cpp (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½) 
 
-#include "CashRegister.h"
+#include "Actors/CashRegister.h"
 #include "Components/StaticMeshComponent.h"
-#include "EconomySubsystem.h"
+#include "Subsystems/EconomySubsystem.h"
 
 ACashRegister::ACashRegister() {
   PrimaryActorTick.bCanEverTick = false;
@@ -19,7 +19,7 @@ void ACashRegister::OnInteract(AController *Interactor) {
 
   if (UEconomySubsystem *EconomySubsystem =
           GetWorld()->GetGameInstance()->GetSubsystem<UEconomySubsystem>()) {
-    const int32 ProfitAmount = 100; // Ñóììà äëÿ ïðèìåðà
+    const int32 ProfitAmount = 100; // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     EconomySubsystem->AddMoney(ProfitAmount);
 
     UE_LOG(LogTemp, Log, TEXT("Added %d to balance via Cash Register."),

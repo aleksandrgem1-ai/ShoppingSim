@@ -1,69 +1,57 @@
-// StoreZoneData.h (ОБНОВЛЕННЫЙ)
-
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Utils/FurnitureTypes.h"  // РџРѕРґРєР»СЋС‡Р°РµРј Р•Р”РРќРЎРўР’Р•РќРќРћР• РѕРїСЂРµРґРµР»РµРЅРёРµ EZoneType Рё FZoneSlot
 #include "Engine/DataAsset.h"
 #include "StoreZoneData.generated.h"
 
-class AStoreZoneActor; // Forward declaration
-
-// Определяем типы зон
-UENUM(BlueprintType)
-enum class EZoneType : uint8 {
-  // Одиночный предмет (полка, холодильник)
-  Prop UMETA(DisplayName = "Prop"),
-
-  // Зона-шаблон, которая содержит в себе другие предметы
-  Template UMETA(DisplayName = "Template")
-};
-
-// Структура для описания дочерних объектов в шаблоне
 USTRUCT(BlueprintType)
-struct FSubItemInfo {
-  GENERATED_BODY()
+struct FSubItemInfo
+{
+    GENERATED_BODY()
 
-  // Какой Data Asset использовать для дочернего объекта
-  UPROPERTY(EditAnywhere, BlueprintReadOnly)
-  TObjectPtr<UStoreZoneData> SubItemData;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    TObjectPtr<class UStoreZoneData> SubItemData;
 
-  // Позиция и поворот объекта относительно родителя (шаблона)
-  UPROPERTY(EditAnywhere, BlueprintReadOnly)
-  FTransform RelativeTransform;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FTransform RelativeTransform;
 };
 
 UCLASS(BlueprintType)
-class SHOPPINGSIM_API UStoreZoneData : public UPrimaryDataAsset {
-  GENERATED_BODY()
+class SHOPPINGSIM_API UStoreZoneData : public UPrimaryDataAsset
+{
+    GENERATED_BODY()
 
 public:
-  // Тип этой зоны
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data")
-  EZoneType ZoneType = EZoneType::Prop;
+    // РўРёРї СЌС‚РѕР№ Р·РѕРЅС‹ (Custom РёР»Рё Template)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data")
+    EZoneType ZoneType = EZoneType::Custom;
 
-  // Имя зоны, которое будет отображаться в UI
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data")
-  FText ZoneName;
+    // РРјСЏ Р·РѕРЅС‹ РґР»СЏ UI
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data")
+    FText ZoneName;
 
-  // Стоимость постройки
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data")
-  int32 Cost = 100;
+    // РЎС‚РѕРёРјРѕСЃС‚СЊ РїРѕСЃС‚СЂРѕР№РєРё
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data")
+    int32 Cost = 100;
 
-  // Доход, который зона генерирует (если применимо)
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data")
-  float IncomePerSecond = 0.0f;
+    // Р”РѕС…РѕРґ, РєРѕС‚РѕСЂС‹Р№ Р·РѕРЅР° РіРµРЅРµСЂРёСЂСѓРµС‚ (РµСЃР»Рё РїСЂРёРјРµРЅРёРјРѕ)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data")
+    float IncomePerSecond = 0.0f;
 
-  // Визуальное представление (для шаблонов это может быть просто пол или
-  // невидимый объект)
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data")
-  TSoftObjectPtr<UStaticMesh> ZoneMesh;
+    // Р’РёР·СѓР°Р»СЊРЅРѕРµ РїСЂРµРґСЃС‚Р°РІР»РµРЅРёРµ
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data")
+    TSoftObjectPtr<UStaticMesh> ZoneMesh;
 
-  // Иконка для UI
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data")
-  TSoftObjectPtr<UTexture2D> ZoneIcon;
+    // РРєРѕРЅРєР° РґР»СЏ UI
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data")
+    TSoftObjectPtr<UTexture2D> ZoneIcon;
 
-  // Массив дочерних объектов (используется, только если ZoneType = Template)
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data",
-            meta = (EditCondition = "ZoneType == EZoneType::Template"))
-  TArray<FSubItemInfo> TemplateItems;
+    // РњР°СЃСЃРёРІ desc РґР»СЏ С€Р°Р±Р»РѕРЅРЅС‹С… Р·РѕРЅ (Prefab) вЂ” РµСЃР»Рё Р·РѕРЅР°-РєРѕРјРїРѕРЅРѕРІРєР° РёР· РґСЂСѓРіРёС… Р·РѕРЅ
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data", meta = (EditCondition = "ZoneType == EZoneType::Template"))
+    TArray<FSubItemInfo> TemplateItems;
+
+    // РњР°СЃСЃРёРІ СЃР»РѕС‚РѕРІ РґР»СЏ СЂР°Р·РјРµС‰РµРЅРёСЏ РјРµР±РµР»Рё (С‚РѕР»СЊРєРѕ РґР»СЏ С€Р°Р±Р»РѕРЅРѕРІ)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zone Data", meta = (EditCondition = "ZoneType == EZoneType::Template"))
+    TArray<FZoneSlot> ZoneSlots;
 };

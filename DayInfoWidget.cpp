@@ -1,6 +1,7 @@
-#include "DayInfoWidget.h"
+// DayInfoWidget.cpp
+#include "UI/HUD/DayInfoWidget.h"
 #include "Components/TextBlock.h"
-#include "TimeManagerSubsystem.h"
+#include "Subsystems/TimeManagerSubsystem.h"
 
 void UDayInfoWidget::NativeConstruct() {
   Super::NativeConstruct();
@@ -14,8 +15,20 @@ void UDayInfoWidget::NativeConstruct() {
   }
 }
 
-void UDayInfoWidget::UpdateDayInfo(int32 NewDay, int32 PreviousDayIncome,
-                                   int32 PreviousDayGoal, int32 NewDayGoal) {
+void UDayInfoWidget::NativeDestruct() {
+  if (UWorld *World = GetWorld()) {
+    if (UTimeManagerSubsystem *TimeManager =
+            World->GetSubsystem<UTimeManagerSubsystem>()) {
+      TimeManager->OnDayChanged.RemoveDynamic(this,
+                                              &UDayInfoWidget::UpdateDayInfo);
+    }
+  }
+  Super::NativeDestruct();
+}
+
+void UDayInfoWidget::UpdateDayInfo(int32 NewDay, int32 /*PreviousDayIncome*/,
+                                   int32 /*PreviousDayGoal*/,
+                                   int32 NewDayGoal) {
   if (DayText) {
     DayText->SetText(
         FText::FromString(FString::Printf(TEXT("Day: %d"), NewDay)));
@@ -24,7 +37,6 @@ void UDayInfoWidget::UpdateDayInfo(int32 NewDay, int32 PreviousDayIncome,
     GoalText->SetText(
         FText::FromString(FString::Printf(TEXT("Goal: %d"), NewDayGoal)));
   }
-  // Доход теперь обновляется отдельным событием SetIncome, хардкод убран
 }
 
 void UDayInfoWidget::SetDayInfo(int32 Day, int32 Goal) {
@@ -41,7 +53,5 @@ void UDayInfoWidget::SetIncome(int32 CurrentIncome) {
   if (IncomeText) {
     IncomeText->SetText(
         FText::FromString(FString::Printf(TEXT("Income: %d"), CurrentIncome)));
-  } else {
-    UE_LOG(LogTemp, Warning, TEXT("[HUD] IncomeText is nullptr"));
   }
 }

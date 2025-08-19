@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Blueprint/UserWidget.h"
 #include "CoreMinimal.h"
@@ -12,7 +12,7 @@ class SHOPPINGSIM_API UMoneyHUDWidget : public UUserWidget {
   GENERATED_BODY()
 
 public:
-  /** Обновляет отображаемую сумму */
+  /** Обновляет отображаемую сумму */ 
   UFUNCTION(BlueprintCallable)
   void SetMoney(int32 NewValue);
 

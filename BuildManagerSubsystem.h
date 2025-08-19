@@ -1,7 +1,5 @@
-// BuildManagerSubsystem.h (ПОЛНАЯ ВЕРСИЯ)
-
+// BuildManagerSubsystem.h (fixed)
 #pragma once
-
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
@@ -10,6 +8,8 @@
 class UStoreZoneData;
 class AStoreZoneActor;
 class UInputMappingContext;
+class ABuildModePawn;
+class APawn;
 
 UCLASS()
 class SHOPPINGSIM_API UBuildManagerSubsystem : public UGameInstanceSubsystem {
@@ -18,39 +18,38 @@ class SHOPPINGSIM_API UBuildManagerSubsystem : public UGameInstanceSubsystem {
 public:
   virtual void Initialize(FSubsystemCollectionBase &Collection) override;
 
-  // --- ЕДИНАЯ ТОЧКА ВХОДА ДЛЯ ПЕРЕКЛЮЧЕНИЯ ---
+  // Р•Р”РРќРђРЇ РўРћР§РљРђ Р’РҐРћР”Рђ
   void ToggleBuildMode();
 
-  // --- Функции для управления процессом строительства ---
+  // РЈРїСЂР°РІР»РµРЅРёРµ СЃС‚СЂРѕРёС‚РµР»СЊСЃС‚РІРѕРј
   void StartPlacement();
   void UpdateGhostActorTransform();
   void ConfirmPlacement();
   void CancelPlacement();
-
   void SelectObjectForMove(AStoreZoneActor *ZoneToMove);
   void HandleDestruction(AStoreZoneActor *ZoneToDestroy);
-
   void ToggleGridSnapping();
   void AddRotation(float Angle);
 
 private:
-  // --- Приватные функции для внутренней логики ---
+  // Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ Р»РѕРіРёРєР°
   void EnterBuildMode();
   void ExitBuildMode();
 
-  // --- Свойства для переключения режимов ---
-  UPROPERTY() TObjectPtr<APawn> OriginalPlayerPawn;
-  UPROPERTY() TObjectPtr<UInputMappingContext> PlayerMappingContext;
-  UPROPERTY() TObjectPtr<UInputMappingContext> BuildModeMappingContext;
-  TSubclassOf<APawn> BuildModePawnClass;
+  // Р РµР¶РёРјС‹/РёРЅРїСѓС‚
+  UPROPERTY() TObjectPtr<APawn> OriginalPlayerPawn = nullptr;
+  UPROPERTY() TObjectPtr<UInputMappingContext> PlayerMappingContext = nullptr;
+  UPROPERTY()
+  TObjectPtr<UInputMappingContext> BuildModeMappingContext = nullptr;
+  UPROPERTY() TSubclassOf<ABuildModePawn> BuildModePawnClass;
+  UPROPERTY(Transient) TObjectPtr<APawn> SpawnedBuildPawn = nullptr;
 
-  // --- Свойства для управления строительством ---
-  UPROPERTY() TObjectPtr<UStoreZoneData> TestZoneToBuild;
-  UPROPERTY() TObjectPtr<AStoreZoneActor> GhostActor;
+  // РЎС‚СЂРѕРёС‚РµР»СЊСЃС‚РІРѕ
+  UPROPERTY() TObjectPtr<UStoreZoneData> TestZoneToBuild = nullptr;
+  UPROPERTY() TObjectPtr<AStoreZoneActor> GhostActor = nullptr;
 
-  // --- ГЛАВНЫЙ ФЛАГ СОСТОЯНИЯ ---
+  // РЎРѕСЃС‚РѕСЏРЅРёРµ
   bool bIsInBuildMode = false;
-
   bool bIsGridSnappingEnabled = true;
   float CurrentPlacementRotation = 0.0f;
 };

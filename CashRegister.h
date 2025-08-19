@@ -1,10 +1,10 @@
-// CashRegister.h
+// CashRegister.h 
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InteractableActor.h"
-#include "CashRegister.generated.h" // Этот include обязателен для UHT!
+#include "Actors/InteractableActor.h"
+#include "CashRegister.generated.h" // пїЅпїЅпїЅпїЅ include пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ UHT!
 
 UCLASS()
 class SHOPPINGSIM_API ACashRegister : public AInteractableActor

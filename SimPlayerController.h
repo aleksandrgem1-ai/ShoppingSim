@@ -1,5 +1,3 @@
-// SimPlayerController.h (хяопюбкеммши)
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -8,6 +6,7 @@
 
 class UInputMappingContext;
 class UGameHUDWidget;
+class UEventManagerSubsystem;
 
 UCLASS()
 class SHOPPINGSIM_API ASimPlayerController : public APlayerController {
@@ -27,9 +26,12 @@ private:
 
   int32 MappingPriority = 0;
 
-  // --- назъбкъел меднярючыхе ябниярбю ---
+  UPROPERTY(EditDefaultsOnly, Category = "UI")
   TSubclassOf<UGameHUDWidget> GameHUDClass;
 
   UPROPERTY(Transient)
-  TObjectPtr<UGameHUDWidget> GameHUD;
+  TObjectPtr<UGameHUDWidget> GameHUD = nullptr;
+
+  UFUNCTION()
+  void HandleGameEvent(const FText &EventText);
 };

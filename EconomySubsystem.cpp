@@ -1,11 +1,11 @@
 // EconomySubsystem.cpp
 
-#include "EconomySubsystem.h"
+#include "Subsystems/EconomySubsystem.h"
 
 void UEconomySubsystem::AddMoney(int32 Amount) {
   if (Amount > 0) {
     CurrentBalance += Amount;
-    CurrentIncome += Amount; // фикс: учитываем доход
+    CurrentIncome += Amount; // пїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 
 
     OnBalanceChanged.Broadcast(CurrentBalance);
     OnIncomeChanged.Broadcast(CurrentIncome);

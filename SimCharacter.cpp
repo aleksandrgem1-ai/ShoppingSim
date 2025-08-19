@@ -1,15 +1,17 @@
-﻿// SimCharacter.cpp (ПОЛНАЯ ВЕРСИЯ)
-
-#include "SimCharacter.h"
-#include "BuildManagerSubsystem.h"
+#include "Characters/SimCharacter.h"
+#include "Actors/ComputerActor.h"
+#include "Actors/InteractableActor.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "DrawDebugHelpers.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "InputAction.h"
-#include "InteractableActor.h"
+#include "Settings/SimSettings.h"
+#include "Subsystems/BuildManagerSubsystem.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Utils/AimTraceService.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSimChar, Log, All);
 
@@ -31,23 +33,24 @@ ASimCharacter::ASimCharacter() {
   FollowCamera->SetRelativeLocation(FVector(0.f, 0.f, 60.f));
   FollowCamera->bUsePawnControlRotation = true;
 
+  // Load input actions (from first file)
   static ConstructorHelpers::FObjectFinder<UInputAction> IA_MoveRef(
-      TEXT("/Game/AssetInput/Asset/IA_Move"));
+      TEXT("/Game/AssetInput/Asset/IA_Move.IA_Move"));
   if (IA_MoveRef.Succeeded())
     MoveAction = IA_MoveRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction> IA_LookRef(
-      TEXT("/Game/AssetInput/Asset/IA_Look"));
+      TEXT("/Game/AssetInput/Asset/IA_Look.IA_Look"));
   if (IA_LookRef.Succeeded())
     LookAction = IA_LookRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction> IA_InteractRef(
-      TEXT("/Game/AssetInput/Asset/IA_Interact"));
+      TEXT("/Game/AssetInput/Asset/IA_Interact.IA_Interact"));
   if (IA_InteractRef.Succeeded())
     InteractAction = IA_InteractRef.Object;
 
   static ConstructorHelpers::FObjectFinder<UInputAction> IA_ToggleBuildRef(
-      TEXT("/Game/AssetInput/Asset/IA_ToggleBuildMode"));
+      TEXT("/Game/AssetInput/Asset/IA_ToggleBuildMode.IA_ToggleBuildMode"));
   if (IA_ToggleBuildRef.Succeeded())
     ToggleBuildModeAction = IA_ToggleBuildRef.Object;
 }
@@ -69,17 +72,9 @@ void ASimCharacter::SetupPlayerInputComponent(
     if (InteractAction)
       EIC->BindAction(InteractAction, ETriggerEvent::Started, this,
                       &ASimCharacter::Interact);
-
     if (ToggleBuildModeAction)
       EIC->BindAction(ToggleBuildModeAction, ETriggerEvent::Started, this,
                       &ASimCharacter::ToggleBuildMode);
-  }
-}
-
-void ASimCharacter::ToggleBuildMode() {
-  if (UBuildManagerSubsystem *BuildManager =
-          GetGameInstance()->GetSubsystem<UBuildManagerSubsystem>()) {
-    BuildManager->ToggleBuildMode();
   }
 }
 
@@ -92,9 +87,11 @@ void ASimCharacter::Move(const FInputActionValue &Value) {
   const FVector2D Input2D = Value.Get<FVector2D>();
   if (!Controller)
     return;
+
   const FRotator ControlRot(0.f, Controller->GetControlRotation().Yaw, 0.f);
   const FVector Forward = FRotationMatrix(ControlRot).GetUnitAxis(EAxis::X);
   const FVector Right = FRotationMatrix(ControlRot).GetUnitAxis(EAxis::Y);
+
   if (Input2D.SizeSquared() > KINDA_SMALL_NUMBER) {
     AddMovementInput(Forward, Input2D.Y);
     AddMovementInput(Right, Input2D.X);
@@ -107,26 +104,67 @@ void ASimCharacter::Look(const FInputActionValue &Value) {
   AddControllerPitchInput(Input.Y);
 }
 
-void ASimCharacter::Interact(const FInputActionValue &Value) {
-  if (TargetedInteractable) {
-    TargetedInteractable->OnInteract(GetController());
+void ASimCharacter::Interact(const FInputActionValue & /*Value*/) {
+  if (!TargetedInteractable)
+    return;
+
+  // Если это компьютер (AComputerActor), включить/выключить UI и сменить режим
+  // ввода
+  if (AComputerActor *Computer =
+          Cast<AComputerActor>(TargetedInteractable.Get())) {
+    if (Computer->DesktopWidgetComp) {
+      bool bIsVisible = Computer->DesktopWidgetComp->IsVisible();
+
+      Computer->DesktopWidgetComp->SetVisibility(!bIsVisible);
+
+      APlayerController *PC = Cast<APlayerController>(GetController());
+      if (PC) {
+        if (!bIsVisible) {
+          PC->bShowMouseCursor = true;
+          PC->SetInputMode(FInputModeUIOnly());
+        } else {
+          PC->bShowMouseCursor = false;
+          PC->SetInputMode(FInputModeGameOnly());
+        }
+      }
+      return;
+    }
+  }
+
+  // Иначе, если это любой другой Interactable (ASimCharacter first file)
+  if (AInteractableActor *Interactable =
+          Cast<AInteractableActor>(TargetedInteractable.Get())) {
+    Interactable->OnInteract(GetController());
+  }
+}
+
+void ASimCharacter::ToggleBuildMode() {
+  if (UBuildManagerSubsystem *BuildManager =
+          GetGameInstance()->GetSubsystem<UBuildManagerSubsystem>()) {
+    BuildManager->ToggleBuildMode();
   }
 }
 
 void ASimCharacter::TraceForInteractable() {
   if (!Controller)
     return;
-  FVector Location;
-  FRotator Rotation;
-  Controller->GetPlayerViewPoint(Location, Rotation);
-  FVector End = Location + Rotation.Vector() * 300.f;
+
+  const USimSettings *Settings = GetDefault<USimSettings>();
+  const float Distance = Settings ? Settings->TraceDistanceInteract : 15000.f;
+  const ECollisionChannel Channel =
+      Settings ? Settings->TraceChannelInteract.GetValue() : ECC_Visibility;
+
+  TArray<const AActor *> Ignore;
+  Ignore.Add(this);
+
   FHitResult HitResult;
-  FCollisionQueryParams Params;
-  Params.AddIgnoredActor(this);
-  bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Location, End,
-                                                   ECC_Visibility, Params);
+
+  const bool bHit = FAimTraceService::TraceFromScreenCenter(
+      GetWorld(), Cast<APlayerController>(Controller), Distance, Channel,
+      Ignore, HitResult, false);
+
   if (bHit) {
-    TargetedInteractable = Cast<AInteractableActor>(HitResult.GetActor());
+    TargetedInteractable = HitResult.GetActor();
   } else {
     TargetedInteractable = nullptr;
   }

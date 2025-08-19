@@ -1,4 +1,4 @@
-// InteractableActor.h
+// InteractableActor.h 
 #pragma once
 
 #include "CoreMinimal.h"
@@ -12,15 +12,15 @@ class SHOPPINGSIM_API AInteractableActor : public AActor {
 public:
   AInteractableActor();
 
-  /** Эта функция будет вызываться, когда игрок взаимодействует с объектом */
+  /** Р­С‚Р° С„СѓРЅРєС†РёСЏ Р±СѓРґРµС‚ РІС‹Р·С‹РІР°С‚СЊСЃСЏ, РєРѕРіРґР° РёРіСЂРѕРє РІР·Р°РёРјРѕРґРµР№СЃС‚РІСѓРµС‚ СЃ РѕР±СЉРµРєС‚РѕРј */
   UFUNCTION(BlueprintCallable, Category = "Interaction")
   virtual void OnInteract(AController *Interactor);
 
-  /** Текст, который увидит игрок, посмотрев на объект */
+  /** РўРµРєСЃС‚, РєРѕС‚РѕСЂС‹Р№ СѓРІРёРґРёС‚ РёРіСЂРѕРє, РїРѕСЃРјРѕС‚СЂРµРІ РЅР° РѕР±СЉРµРєС‚ */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
   FString InteractionPromptText;
 
 protected:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-  USceneComponent *Root; // Добавляем корневой компонент для стабильности
+  USceneComponent *Root; // Р”РѕР±Р°РІР»СЏРµРј РєРѕСЂРЅРµРІРѕР№ РєРѕРјРїРѕРЅРµРЅС‚ РґР»СЏ СЃС‚Р°Р±РёР»СЊРЅРѕСЃС‚Рё
 };

@@ -1,20 +1,27 @@
-#include "ClockWidget.h"
+// ClockWidget.cpp
+#include "UI/HUD/ClockWidget.h"
 #include "Components/TextBlock.h"
-#include "Kismet/GameplayStatics.h"
-#include "TimeManagerSubsystem.h"
+#include "Subsystems/TimeManagerSubsystem.h"
 
 void UClockWidget::NativeConstruct() {
   Super::NativeConstruct();
 
   if (UWorld *World = GetWorld()) {
-    // Было:
-    // if (UTimeManagerSubsystem* TimeManager =
-    //        World->GetGameInstance()->GetSubsystem<UTimeManagerSubsystem>())
     if (UTimeManagerSubsystem *TimeManager =
             World->GetSubsystem<UTimeManagerSubsystem>()) {
       TimeManager->OnTimeUpdated.AddDynamic(this, &UClockWidget::UpdateTime);
     }
   }
+}
+
+void UClockWidget::NativeDestruct() {
+  if (UWorld *World = GetWorld()) {
+    if (UTimeManagerSubsystem *TimeManager =
+            World->GetSubsystem<UTimeManagerSubsystem>()) {
+      TimeManager->OnTimeUpdated.RemoveDynamic(this, &UClockWidget::UpdateTime);
+    }
+  }
+  Super::NativeDestruct();
 }
 
 void UClockWidget::UpdateTime(int32 Hour, int32 Minute) {
@@ -25,6 +32,5 @@ void UClockWidget::UpdateTime(int32 Hour, int32 Minute) {
 }
 
 void UClockWidget::SetTime(int32 Hour, int32 Minute) {
-  // Можно просто переиспользовать существующую логику
   UpdateTime(Hour, Minute);
 }

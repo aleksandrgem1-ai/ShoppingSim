@@ -1,4 +1,4 @@
-// TimeManagerSubsystem.h
+// TimeManagerSubsystem.h 
 
 #pragma once
 
@@ -8,7 +8,7 @@
 
 class UCurveFloat;
 
-// --- назъбкъел мнбше декецюрш ---
+// --- п·п▒п╙п╞п▓п⌡п╞п∙п° п²п·п▓п╚п∙ п■п∙п⌡п∙п⌠п░п╒п╚ ---
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTimeUpdatedSignature, int32,
                                              Hour, int32, Minute);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnDayChangedSignature, int32,
@@ -28,11 +28,11 @@ public:
   UPROPERTY(BlueprintAssignable, Category = "Time")
   FOnDayChangedSignature OnDayChanged;
 
-  // --- назъбкъел мнбши декецюр ---
+  // --- п·п▒п╙п╞п▓п⌡п╞п∙п° п²п·п▓п╚п≥ п■п∙п⌡п∙п⌠п░п╒ ---
   UPROPERTY(BlueprintAssignable, Category = "Time")
   FOnTimeUpdatedSignature OnTimeUpdated;
 
-  // --- назъбкъел мнбсч тсмйжхч ---
+  // --- п·п▒п╙п╞п▓п⌡п╞п∙п° п²п·п▓пёп╝ п╓пёп²п п╕п≤п╝ ---
   void GetCurrentDayInfo(int32 &OutDay, int32 &OutGoal) const;
 
 private:

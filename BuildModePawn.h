@@ -1,7 +1,5 @@
-// BuildModePawn.h (ѕќЋЌјя ¬≈–—»я)
-
+// BuildModePawn.h (as provided, ok)
 #pragma once
-
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
@@ -25,13 +23,11 @@ protected:
   virtual void SetupPlayerInputComponent(
       class UInputComponent *PlayerInputComponent) override;
 
-  UPROPERTY(VisibleAnywhere)
-  TObjectPtr<UCameraComponent> CameraComponent;
-
+  UPROPERTY(VisibleAnywhere) TObjectPtr<UCameraComponent> CameraComponent;
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<UFloatingPawnMovement> MovementComponent;
 
-  // --- Input Actions дл€ режима строительства ---
+  // Input Actions
   UPROPERTY() TObjectPtr<UInputAction> MoveAction;
   UPROPERTY() TObjectPtr<UInputAction> LookAction;
   UPROPERTY() TObjectPtr<UInputAction> FlyUpAction;
@@ -45,7 +41,6 @@ protected:
   UPROPERTY() TObjectPtr<UInputAction> ToggleBuildModeAction;
 
 private:
-  // --- ‘ункции-обработчики ---
   void Move(const FInputActionValue &Value);
   void Look(const FInputActionValue &Value);
   void HandleFlyUp(const FInputActionValue &Value);

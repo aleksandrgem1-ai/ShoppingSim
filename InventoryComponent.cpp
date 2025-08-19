@@ -1,7 +1,6 @@
-// InventoryComponent.cpp (НОВЫЙ ФАЙЛ)
-
-#include "InventoryComponent.h"
-#include "ProductData.h"
+// InventoryComponent.cpp (final)
+#include "Components/InventoryComponent.h"
+#include "Data/ProductData.h"
 
 UInventoryComponent::UInventoryComponent() {
   PrimaryComponentTick.bCanEverTick = false;
@@ -10,13 +9,10 @@ UInventoryComponent::UInventoryComponent() {
 void UInventoryComponent::BeginPlay() {
   Super::BeginPlay();
 
-  // ВРЕМЕННО: Для теста автоматически "закупаем" 10 единиц тестового товара.
-  // Позже это будет делать игрок через UI.
-  // Убедитесь, что у вас есть Data Asset по этому пути!
-  UProductData *TestProduct = Cast<UProductData>(
-      StaticLoadObject(UProductData::StaticClass(), nullptr,
-                       TEXT("/Game/Data/Products/DA_Milk.DA_Milk")));
-  if (TestProduct) {
+  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ). пїЅпїЅпїЅпїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅ.
+  if (UProductData *TestProduct = Cast<UProductData>(
+          StaticLoadObject(UProductData::StaticClass(), nullptr,
+                           TEXT("/Game/Data/Products/DA_Milk.DA_Milk")))) {
     Stock.Add(TestProduct, 10);
   }
 }
@@ -26,24 +22,40 @@ int32 UInventoryComponent::SellRandomItem() {
     return 0;
   }
 
-  // Выбираем случайный товар из имеющихся
+  // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅ пїЅ TMap: TObjectPtr<UProductData>
   TArray<TObjectPtr<UProductData>> Products;
   Stock.GetKeys(Products);
+
+  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+  if (Products.Num() == 0) {
+    return 0;
+  }
+
   UProductData *ProductToSell =
-      Products[FMath::RandRange(0, Products.Num() - 1)];
+      Products[FMath::RandRange(0, Products.Num() - 1)].Get();
+  if (!ProductToSell) {
+    return 0;
+  }
 
-  if (ProductToSell && Stock.Contains(ProductToSell)) {
-    // Уменьшаем количество товара на 1
-    Stock[ProductToSell]--;
+  if (int32 *CountPtr = Stock.Find(ProductToSell)) {
+    int32 &Count = *CountPtr;
+    if (Count <= 0) {
+      // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+      Stock.Remove(ProductToSell);
+      return 0;
+    }
+
+    // пїЅпїЅпїЅпїЅпїЅпїЅ 1 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    Count--;
+
     UE_LOG(LogTemp, Log, TEXT("Sold one %s. Stock left: %d"),
-           *ProductToSell->ProductName.ToString(), Stock[ProductToSell]);
+           *ProductToSell->ProductName.ToString(), Count);
 
-    // Если товар закончился, убираем его из списка
-    if (Stock[ProductToSell] <= 0) {
+    if (Count <= 0) {
       Stock.Remove(ProductToSell);
     }
 
-    // Возвращаем выручку от продажи
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     return ProductToSell->SalePrice;
   }
 
@@ -51,10 +63,27 @@ int32 UInventoryComponent::SellRandomItem() {
 }
 
 void UInventoryComponent::StockItem(UProductData *Product, int32 Quantity) {
-  if (!Product || Quantity <= 0)
+  if (!Product || Quantity <= 0) {
     return;
+  }
 
-  // Добавляем товар на склад
-  const int32 CurrentQuantity = Stock.FindOrAdd(Product);
-  Stock.Add(Product, CurrentQuantity + Quantity);
+  // FindOrAdd пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
+  int32 &CurrentQuantity = Stock.FindOrAdd(Product);
+  CurrentQuantity += Quantity;
+}
+
+int32 UInventoryComponent::GetQuantity(const UProductData *Product) const {
+  if (!Product) {
+    return 0;
+  }
+
+  // Find пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ; TObjectPtr пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+  const int32 *CountPtr = Stock.Find(const_cast<UProductData *>(Product));
+  return CountPtr ? *CountPtr : 0;
+}
+
+void UInventoryComponent::GetAllProducts(
+    TArray<TObjectPtr<UProductData>> &OutProducts) const {
+  OutProducts.Reset();
+  Stock.GetKeys(OutProducts);
 }

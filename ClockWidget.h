@@ -1,5 +1,4 @@
 // ShoppingSim/ClockWidget.h
-
 #pragma once
 
 #include "Blueprint/UserWidget.h"
@@ -13,12 +12,12 @@ class SHOPPINGSIM_API UClockWidget : public UUserWidget {
   GENERATED_BODY()
 
 public:
-  /** Устанавливает время в часах и минутах */
   UFUNCTION(BlueprintCallable)
   void SetTime(int32 Hour, int32 Minute);
 
 protected:
   virtual void NativeConstruct() override;
+  virtual void NativeDestruct() override;
 
   UPROPERTY(meta = (BindWidget))
   TObjectPtr<UTextBlock> TimeText;
